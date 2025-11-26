@@ -1,0 +1,335 @@
+:root {
+  /* SBI Color Palette References */
+  --sbi-navy: #031E40;
+  --sbi-royal: #00467F;
+  --sbi-cyan: #0078A8;
+  --sbi-gold: #D4BC8B; /* Optional accent */
+
+  /* Applied Variables */
+  --primary: var(--sbi-royal);          /* Main Action Color */
+  --primary-hover: var(--sbi-navy);     /* Darker hover */
+  
+  /* Sidebar uses the gradient, but we set a fallback color here */
+  --sidebar-bg: var(--sbi-navy);        
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.1); /* Glassmorphic hover effect */
+  
+  --header-bg: #ffffff;                 /* Keep header clean */
+  --border: #e6e9ef;                    /* Subtle light gray border */
+  
+  --text-dark: var(--sbi-navy);         /* Deep Navy text */
+  --text-light: #B8C6D6;                /* Light Blue-Gray text */
+  --nav-text: #ffffff;                  /* White text for dark sidebar */
+}
+
+*{
+  font-family: Poppins, sans-serif;
+}
+
+/* Header */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: 64px;
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  margin-left: 220px;
+}
+
+.app-header .left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--primary); /* Royal Blue */
+  transition: 0.2s ease;
+}
+
+.icon-btn:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.icon-btn i {
+  font-size: 18px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.brand-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-dark);
+}
+
+.brand-sub {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.app-header .center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  min-width: 420px;
+  max-width: 640px;
+  background: #fff;
+  transition: 0.2s ease;
+}
+
+.search-box:focus-within {
+  border-color: var(--sbi-cyan); /* Highlight search on focus */
+  box-shadow: 0 0 0 3px rgba(0, 120, 168, 0.1);
+}
+
+.search-box i {
+  color: var(--text-dark);
+}
+
+.search-box input {
+  border: 0;
+  outline: none;
+  width: 100%;
+  font-size: 14px;
+  color: var(--text-dark);
+}
+
+.app-header .right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-mini {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--primary); /* Blue border for profile */
+}
+
+.profile-mini img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Sidebar */
+.app-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 220px;
+  /* SBI Card Gradient Background */
+  background: linear-gradient(180deg, var(--sbi-royal) 0%, var(--sbi-navy) 100%);
+  color: var(--nav-text);
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+  z-index: 20;
+  transform: translateX(0);
+  transition: transform .2s ease;
+}
+
+.app-sidebar.open {
+  transform: translateX(0);
+}
+
+.sidebar-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  /* padding: 20px 0; Increased padding slightly */
+}
+
+.sidebar-brand img {
+  width: 200px;
+  height: 65px;
+  border-radius: 8px;
+  margin: 10px;
+  /* background: #fff; */
+  padding: 4px;
+}
+
+.sidebar-brand .brand-name {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.5px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.nav-icon {
+  height: 44px;
+  border-radius: 0 10px 10px 0; /* Modified for a cleaner side tab look */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.75);
+  transition: 0.2s ease;
+  padding: 0 20px;
+  text-decoration: none;
+  margin-right: 10px;
+}
+
+.nav-icon i {
+  font-size: 20px;
+  width: 22px;
+  transition: 0.2s ease;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.nav-icon .label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Active / Hover States */
+.nav-icon.active,
+.nav-icon:hover {
+  background: var(--sidebar-hover-bg);
+  border-left: 4px solid var(--sbi-cyan); /* Cyan accent line on active */
+  color: #fff;
+}
+
+.nav-icon:hover i,
+.nav-icon.active i,
+.nav-icon:hover .label,
+.nav-icon.active .label {
+  color: #fff;
+  text-shadow: 0 0 10px rgba(0, 120, 168, 0.5); /* Slight glow */
+}
+
+.nav-divider {
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  margin: 15px auto;
+}
+
+.sidebar-profile {
+  margin-top: auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+  background: rgba(0, 0, 0, 0.2); /* Darker footer area */
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-profile .avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--sbi-cyan); /* Cyan border */
+  margin-bottom: 8px;
+}
+
+.sidebar-profile .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sidebar-profile .profile-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+}
+
+/* Layout offsets (Unchanged) */
+.with-sidebar {
+  padding-left: 220px;
+}
+
+.content-wrap {
+  margin-left: 220px;
+  padding: 16px;
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 30, 64, 0.5); /* Navy tint overlay */
+  backdrop-filter: blur(2px);
+  z-index: 15;
+  display: none;
+}
+
+@media (max-width: 992px) {
+  .with-sidebar {
+    padding-left: 0;
+  }
+
+  .content-wrap {
+    margin-left: 0;
+  }
+
+  .app-header {
+    margin-left: 0;
+  }
+
+  .app-sidebar {
+    transform: translateX(-240px);
+  }
+
+  .app-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay {
+    display: block;
+  }
+}

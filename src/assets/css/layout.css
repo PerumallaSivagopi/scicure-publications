@@ -1,28 +1,21 @@
 :root {
-  /* SBI Color Palette References */
-  --sbi-navy: #031E40;
-  --sbi-royal: #00467F;
-  --sbi-cyan: #0078A8;
-  --sbi-gold: #D4BC8B; /* Optional accent */
+  --theme-navy: #031E40;
+  --theme-royal: #00467F;
+  --theme-cyan: #0078A8;
+  --theme-gold: #D4BC8B; 
 
-  /* Applied Variables */
-  --primary: var(--sbi-royal);          /* Main Action Color */
-  --primary-hover: var(--sbi-navy);     /* Darker hover */
+  --primary: var(--theme-royal);
+  --primary-hover: var(--theme-navy);
   
-  /* Sidebar uses the gradient, but we set a fallback color here */
-  --sidebar-bg: var(--sbi-navy);        
-  --sidebar-hover-bg: rgba(255, 255, 255, 0.1); /* Glassmorphic hover effect */
+  --sidebar-bg: var(--theme-navy);        
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.1); 
   
-  --header-bg: #ffffff;                 /* Keep header clean */
-  --border: #e6e9ef;                    /* Subtle light gray border */
+  --header-bg: #ffffff;                
+  --border: #e6e9ef;                  
   
-  --text-dark: var(--sbi-navy);         /* Deep Navy text */
-  --text-light: #B8C6D6;                /* Light Blue-Gray text */
-  --nav-text: #ffffff;                  /* White text for dark sidebar */
-}
-
-*{
-  font-family: Poppins, sans-serif;
+  --text-dark: var(--theme-navy);        
+  --text-light: #B8C6D6;              
+  --nav-text: #ffffff;                 
 }
 
 /* Header */
@@ -118,7 +111,7 @@
 }
 
 .search-box:focus-within {
-  border-color: var(--sbi-cyan); /* Highlight search on focus */
+  border-color: var(--theme-cyan); /* Highlight search on focus */
   box-shadow: 0 0 0 3px rgba(0, 120, 168, 0.1);
 }
 
@@ -162,8 +155,7 @@
   left: 0;
   bottom: 0;
   width: 220px;
-  /* SBI Card Gradient Background */
-  background: linear-gradient(180deg, var(--sbi-royal) 0%, var(--sbi-navy) 100%);
+  background: linear-gradient(180deg, var(--theme-royal) 0%, var(--theme-navy) 100%);
   color: var(--nav-text);
   display: flex;
   flex-direction: column;
@@ -238,7 +230,7 @@
 .nav-icon.active,
 .nav-icon:hover {
   background: var(--sidebar-hover-bg);
-  border-left: 4px solid var(--sbi-cyan); /* Cyan accent line on active */
+  border-left: 4px solid var(--theme-cyan); /* Cyan accent line on active */
   color: #fff;
 }
 
@@ -273,7 +265,7 @@
   height: 40px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid var(--sbi-cyan); /* Cyan border */
+  border: 2px solid var(--theme-cyan); /* Cyan border */
   margin-bottom: 8px;
 }
 
@@ -302,7 +294,7 @@
 .sidebar-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(3, 30, 64, 0.5); /* Navy tint overlay */
+  background: rgba(3, 30, 64, 0.5);
   backdrop-filter: blur(2px);
   z-index: 15;
   display: none;

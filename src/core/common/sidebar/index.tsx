@@ -22,11 +22,11 @@ const Sidebar = () => {
       <span className="label">{label}</span>
     </Link>
   )
-
+  const IMG_BASE = import.meta.env.VITE_IMAGE_BASE_URL;
   return (
     <aside className={`app-sidebar ${open ? 'open' : ''}`}>
       <div className="sidebar-brand">
-        <img src="/logo-white.png" alt="brand" />
+        <img src={`${IMG_BASE}logo-white.png`} alt="brand" />
         {/* <div className="brand-name">HRM</div> */}
       </div>
 

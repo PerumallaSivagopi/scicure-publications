@@ -13,5 +13,5 @@ const createLazyComponent = (
 }
 
 export const Login = createLazyComponent(() => import('../feature-module/auth/login/login'))
-export const AdminDashboard = createLazyComponent(() => import('../feature-module/pages/starter'))
+export const AdminDashboard = createLazyComponent(() => import('../feature-module/pages/dashboard'))
 export const OnboardingPage = createLazyComponent(() => import('../feature-module/pages/onboarding'))

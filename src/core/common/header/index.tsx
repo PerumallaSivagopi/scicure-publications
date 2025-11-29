@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useAppDispatch, useAppSelector } from '../../data/redux/hooks'
 import { setMobileSidebar } from '../../data/redux/sidebarSlice'
 import { setDataTheme } from '../../data/redux/themeSettingSlice'
@@ -9,21 +9,35 @@ const Header = () => {
   const sidebarOpen = useAppSelector((s) => s.sidebarSlice.mobileSidebar)
 
   const toggleSidebar = () => dispatch(setMobileSidebar(!sidebarOpen))
-  const toggleTheme = () => dispatch(setDataTheme(theme === 'dark' ? 'light' : 'dark'))
+  const toggleTheme   = () => dispatch(setDataTheme(theme === 'dark' ? 'light' : 'dark'))
+  const IMG_BASE = import.meta.env.VITE_IMAGE_BASE_URL;
+
+  // ✅ Add rotation state here
+  const [rotated, setRotated] = useState(false);
+
+  // Wrap your existing function so both things run
+  const handleMenuClick = () => {
+    setRotated(!rotated);   // rotate the arrow
+    toggleSidebar();        // your redux sidebar toggle
+  };
 
   return (
     <header className="app-header">
       <div className="left">
-        {/* <button className="icon-btn" aria-label="Toggle menu" onClick={toggleSidebar}>
-          <i className="ti ti-menu-2" />
-        </button> */}
-        {/* <div className="brand">
-          <img src="/favicon.png" alt="logo" className="brand-logo" />
-          <div className="brand-text">
-            <div className="brand-title">HRM Admin</div>
-            <div className="brand-sub">People Management</div>
-          </div>
-        </div> */}
+        <button className="icon-btn" aria-label="Toggle menu" onClick={handleMenuClick}>
+          
+          <svg
+            className={`menu-icon ${rotated ? "rotate" : ""}`}
+            width="40"
+            height="40"
+            viewBox="-2.4 -2.4 28.80 28.80"
+            xmlns="http://www.w3.org/2000/svg"
+            transform="rotate(180)"
+          >
+            <path d="m11.293 17.293 1.414 1.414L19.414 12l-6.707-6.707-1.414 1.414L15.586 11H6v2h9.586z"></path>
+          </svg>
+
+        </button>
       </div>
 
       <div className="center">

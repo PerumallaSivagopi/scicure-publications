@@ -51,6 +51,7 @@ const Login = () => {
       }
     })();
   };
+  const IMG_BASE = import.meta.env.VITE_IMAGE_BASE_URL;
 
   return (
     
@@ -66,7 +67,7 @@ const Login = () => {
 
           <div className="left-image-wrap">
             <img
-              src="/login.png"
+              src={`${IMG_BASE}login.png`}
               alt="people"
               className="left-image"
             />
@@ -84,7 +85,7 @@ const Login = () => {
         <div className="form-wrap">
           <div className="brand-top text-center mb-2">
             <img
-              src="/logo.png"
+              src={`${IMG_BASE}logo.png`}
               alt="logo"
               style={{ width: 200, height: 70 }}
             />

@@ -26,20 +26,22 @@ const Sidebar = () => {
   return (
     <aside className={`app-sidebar ${open ? 'open' : ''}`}>
       <div className="sidebar-brand">
-        <img src={`${IMG_BASE}logo-white.png`} alt="brand" />
-        {/* <div className="brand-name">HRM</div> */}
+        <img src={`${IMG_BASE}image.png`} alt="brand" />
+        <h1>SCICURE PUBLICATIONS</h1>
       </div>
+
 
       <nav className="sidebar-nav">
         <NavIcon to={all_routes.index} icon="ti-home" label="Dashboard" />
-        <NavIcon to={all_routes.onboarding} icon="ti-users" label="E Onboarding" />
-        <a className="nav-icon" title="Attendance"><i className="ti ti-cash" /><span className="label">Income Tax</span></a>
+        <NavIcon to={all_routes.journals} icon="ti-book" label="Journals" />
+        <NavIcon to={all_routes.article} icon="ti-files" label="Article" />
+        {/* <NavIcon to={all_routes.editorsChief} icon="ti-crown" label="Editors Chief" />
+        <NavIcon to={all_routes.editorsBoard} icon="ti-id-badge" label="Editors Board" /> */}
+        <NavIcon to={all_routes.authors} icon="ti-pencil" label="Authors" />
+        <NavIcon to={all_routes.reviewers} icon="ti-user-check" label="Reviewers" />
+        <NavIcon to={all_routes.notifications} icon="ti-bell" label="Notifications" />
+        <NavIcon to={all_routes.settings} icon="ti-settings" label="Settings" />
       </nav>
-
-      {/* <div className="sidebar-profile">
-        <div className="avatar"><img src="/favicon.png" alt="avatar" /></div>
-        <div className="profile-name">Admin</div>
-      </div> */}
     </aside>
   )
 }

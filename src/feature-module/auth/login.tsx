@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { all_routes } from "../../../router/all_routes";
-import { loginAdmin } from "../../../core/services/authService";
+import { all_routes } from "../../router/all_routes";
+import { loginAdmin } from "../../core/services/authService";
 
 const Login = () => {
   const navigate = useNavigate();
 
-  const [identifier, setIdentifier] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,15 +26,21 @@ const Login = () => {
     e.preventDefault();
     setError("");
 
-    if (!identifier || !password) {
-      setError("Please enter identifier and password");
+    if (!email || !password) {
+      setError("Please enter email and password");
       return;
     }
 
     setLoading(true);
     (async () => {
       try {
-        const token = await loginAdmin(identifier, password);
+        const res = await loginAdmin(email, password);
+        const data = res.data;
+        const token = data.token;
+        const role = data.role;
+        console.log(token);
+        console.log(role);
+        
 
         if (!token) {
           setError("Invalid credentials");
@@ -43,6 +49,7 @@ const Login = () => {
         }
 
         localStorage.setItem("authToken", token);
+        localStorage.setItem("userRole", role);
         navigate(all_routes.index);
       } catch (e) {
         setError(e?.message || "Login failed");
@@ -60,9 +67,9 @@ const Login = () => {
       <aside className="left-panel">
         <div className="left-card">
           <h1 className="left-title">
-            Empowering people <br />
-            through seamless HR <br />
-            management.
+            Advancing knowledge <br />
+             through impactful 
+              publications.
           </h1>
 
           <div className="left-image-wrap">
@@ -74,8 +81,7 @@ const Login = () => {
           </div>
 
           <p className="left-sub">
-            Efficiently manage your workforce, streamline operations
-            effortlessly.
+            Effortlessly manage your research, streamline submissions, and showcase your work globally.
           </p>
         </div>
       </aside>
@@ -83,28 +89,27 @@ const Login = () => {
       {/* RIGHT PANEL */}
       <main className="right-panel">
         <div className="form-wrap">
-          <div className="brand-top text-center mb-2">
-            <img
-              src={`${IMG_BASE}logo.png`}
-              alt="logo"
-              style={{ width: 200, height: 70 }}
-            />
+          <div className="">
+            <div className="login-brand">
+        <img src={`${IMG_BASE}image.png`} alt="brand" />
+        <h1>SCICURE PUBLICATIONS</h1>
+      </div>
           </div>
 
           <h2 className="signin-title mt-5">Sign In</h2>
           <p className="signin-sub">Please enter your details to sign in</p>
 
           <form className="login-form" onSubmit={onSubmit}>
-            {/* IDENTIFIER */}
-            <label className="form-label">User ID</label>
+            {/* Email */}
+            <label className="form-label">Email ID</label>
             <div className="input-with-icon">
               <input
-                type="text"
+                type="email"
                 required
-                value={identifier}
+                value={email}
                 className="login-input"
-                placeholder="Enter your User ID"
-                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="Enter your Email ID"
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
 

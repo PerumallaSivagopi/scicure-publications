@@ -26,10 +26,10 @@ const Feature = () => {
       {open && isMobile ? <div onClick={close} className="sidebar-overlay" /> : null}
       {routeLoading ? <div className="global-loader"><div className="loader"></div></div> : null}
       <div className="content-wrap">
-        <main className="with-sidebar" style={{ background: '#fafafa', minHeight: 'calc(100vh - 64px)', padding: 0 }}>
+        <main className="with-sidebar" style={{ background: 'var(--page-bg)', minHeight: 'calc(100vh - 64px)', padding: 0 }}>
           <Outlet />
         </main>
-        <footer style={{ padding: 12, borderTop: '1px solid #eee', background: '#fff' }}>
+        <footer style={{ padding: 12, borderTop: '1px solid var(--border)', background: 'var(--surface)' }}>
           <small>2025 @copyright</small>
         </footer>
       </div>

@@ -20,6 +20,7 @@ const Header = () => {
     setRotated(!rotated);   // rotate the arrow
     toggleSidebar();        // your redux sidebar toggle
   };
+  
 
   return (
     <header className="app-header">
@@ -51,17 +52,8 @@ const Header = () => {
         <button className="icon-btn" title="Theme" onClick={toggleTheme}>
           <i className={theme === 'dark' ? 'ti ti-sun' : 'ti ti-moon'} />
         </button>
-        <button className="icon-btn" title="Notifications">
-          <i className="ti ti-bell" />
-        </button>
-        <button className="icon-btn" title="Help">
-          <i className="ti ti-help" />
-        </button>
-        <button className="icon-btn" title="Apps">
-          <i className="ti ti-apps" />
-        </button>
         <div className="profile-mini" title="Admin">
-          <img src="/favicon.png" alt="avatar" />
+          <img src="/image.png" alt="avatar" />
         </div>
       </div>
     </header>

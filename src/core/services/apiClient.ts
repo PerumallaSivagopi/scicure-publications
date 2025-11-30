@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { api_base } from '../../environment'
 
-let tokenGetter = () => localStorage.getItem('authToken') || ''
+let tokenGetter = () => localStorage.getItem('authToken')
 
 class ApiClient {
   private client
@@ -13,10 +13,20 @@ class ApiClient {
       headers: { Accept: 'application/json' },
     })
 
-    // Request Interceptor
     this.client.interceptors.request.use((config: any) => {
       const t = tokenGetter()
-      if (t) config.headers = { ...config.headers, Authorization: `Bearer ${t}` }
+      if (import.meta?.env?.DEV) {
+        console.log('API Request to:', config.url, 'with token:', t)
+      }
+
+      const skipAuth = (config as any)?.skipAuth === true
+      if (!skipAuth && t) {
+        config.headers = {
+          ...config.headers,
+          Authorization: `Bearer ${t}`,
+        }
+      }
+
       return config
     })
 

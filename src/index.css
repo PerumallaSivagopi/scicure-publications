@@ -11,6 +11,16 @@
         box-sizing: border-box;
         font-family: 'Poppins', sans-serif;
     }
+    body.light {
+  background: #ffffff;
+  color: #000;
+}
+
+body.dark {
+  background: #1d1d1d;
+  color: #fff;
+}
+
   .loader {
     width: 50px;
     aspect-ratio: 1;
@@ -69,4 +79,30 @@
   .left-panel { height: 340px; padding: 20px; }
   .left-card { max-width: 90%; padding: 25px; }
   .right-panel { padding-top: 20px; }
+}
+
+.login-brand {
+  display: flex;
+  flex-direction: row;   /* Make items side-by-side */
+  align-items: center;   /* Vertically center logo + text */
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  padding: 15px 0;
+}
+
+.login-brand img {
+  width: 60px;           /* Reduce size so it aligns well */
+  height: 60px;
+  border-radius: 8px;
+  margin: 0;
+  padding: 4px;
+}
+
+.login-brand h1 {
+  font-size: 25px;
+  font-weight: 800;
+  color: #1a5688;
+}
+.signin-title
+{
+  margin-top: 20px;
 }

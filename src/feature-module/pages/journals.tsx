@@ -1,80 +1,62 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import '../../assets/css/onboarding.css';
+import { Eye, Edit, Trash2 } from "lucide-react";
 
-const Onboarding = () => {
+interface Journal {
+  journalId: string;
+  journalTitle: string;
+  journalCategory: string;
+  journalISSN: string;
+  createdAt: string;
+  status: string;
+  journalImage?: string;
+}
+
+const JournalsPage = () => {
+  const [journals, setJournals] = useState<Journal[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const data = [
-    {
-      empId: 'Emp-001',
-      name: 'Anthony Lewis',
-      email: 'anthony@example.com',
-      phone: '(123) 4567 890',
-      designation: 'Finance',
-      joiningDate: '12 Sep 2024',
-      status: 'Active'
-    },
-    {
-      empId: 'Emp-002',
-      name: 'Brian Villalobos',
-      email: 'brian@example.com',
-      phone: '(179) 7382 829',
-      designation: 'Developer',
-      joiningDate: '24 Oct 2024',
-      status: 'Active'
-    },
-    {
-      empId: 'Emp-003',
-      name: 'Harvey Smith',
-      email: 'harvey@example.com',
-      phone: '(184) 2719 738',
-      designation: 'Developer',
-      joiningDate: '18 Feb 2024',
-      status: 'Active'
-    },
-    {
-      empId: 'Emp-004',
-      name: 'Stephan Peralt',
-      email: 'peral@example.com',
-      phone: '(193) 7839 748',
-      designation: 'Executive',
-      joiningDate: '17 Oct 2024',
-      status: 'Active'
-    },
-    {
-      empId: 'Emp-005',
-      name: 'Sarah Johnson',
-      email: 'sarah@example.com',
-      phone: '(156) 2841 923',
-      designation: 'Manager',
-      joiningDate: '05 Nov 2024',
-      status: 'Active'
-    },
-    {
-      empId: 'Emp-006',
-      name: 'Michael Brown',
-      email: 'michael@example.com',
-      phone: '(201) 5678 901',
-      designation: 'HR',
-      joiningDate: '10 Dec 2024',
-      status: 'Pending'
-    }
-  ];
+  useEffect(() => {
+    fetch('https://scicure-publications-backend-1.onrender.com/api/users')
+      .then(res => res.json())
+      .then(result => {
+        if (result.data && Array.isArray(result.data)) {
+          const journalData = result.data.filter((item: any) => item.role === 'journal');
+          setJournals(journalData);
+        } else {
+          setJournals([]);
+        }
+      })
+      .catch(err => {
+        console.error("Error fetching journals:", err);
+        setJournals([]);
+      });
+  }, []);
 
-  // Filter data based on search term
+  const handleView = (row: Journal) => console.log("View clicked", row);
+  const handleEdit = (row: Journal) => console.log("Edit clicked", row);
+  const handleDelete = (row: Journal) => {
+    if (window.confirm("Are you sure you want to delete this entry?")) {
+      console.log("Deleted", row);
+    }
+  };
+
+  // Filter data
   const filteredData = useMemo(() => {
-    if (!searchTerm) return data;
+    const dataToFilter = Array.isArray(journals) ? journals : [];
+    if (!searchTerm) return dataToFilter;
+
     const term = searchTerm.toLowerCase();
-    return data.filter(item =>
+    return dataToFilter.filter(item =>
       Object.values(item).some(value =>
         String(value).toLowerCase().includes(term)
       )
     );
-  }, [searchTerm]);
+  }, [searchTerm, journals]);
 
-  // Paginate data
+  // Paginate
   const totalPages = Math.ceil(filteredData.length / pageSize);
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
@@ -87,10 +69,10 @@ const Onboarding = () => {
         <div className="page-header">
           <div className="row align-items-center">
             <div className="col">
-              <h3 className="page-title">E-Onboarding</h3>
+              <h3 className="page-title">Journals</h3>
               <ul className="breadcrumb">
-                <li className="breadcrumb-item"><a href="/">Dashboard</a></li>
-                <li className="breadcrumb-item active">E-Onboarding</li>
+                <li className="breadcrumb-item"><a href="/index">Dashboard</a></li>
+                <li className="breadcrumb-item active">Journals</li>
               </ul>
             </div>
           </div>
@@ -99,21 +81,15 @@ const Onboarding = () => {
         <div className="row">
           <div className="col-md-12">
             <div className="card">
-              <div className="card-header">
-                <h4 className="card-title">Onboarding Employees</h4>
-              </div>
               <div className="card-body">
-                {/* Search and pagination controls */}
+                {/* Controls */}
                 <div className="table-controls" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
                   <div>
                     <label htmlFor="pageSize" style={{ marginRight: '10px' }}>Show entries:</label>
                     <select
                       id="pageSize"
                       value={pageSize}
-                      onChange={(e) => {
-                        setPageSize(parseInt(e.target.value));
-                        setCurrentPage(1);
-                      }}
+                      onChange={(e) => { setPageSize(parseInt(e.target.value)); setCurrentPage(1); }}
                       style={{ padding: '6px 8px', border: '1px solid #ddd', borderRadius: '4px' }}
                     >
                       <option value={5}>5</option>
@@ -127,10 +103,7 @@ const Onboarding = () => {
                       type="text"
                       placeholder="Search..."
                       value={searchTerm}
-                      onChange={(e) => {
-                        setSearchTerm(e.target.value);
-                        setCurrentPage(1);
-                      }}
+                      onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                       style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', width: '200px' }}
                     />
                   </div>
@@ -140,49 +113,46 @@ const Onboarding = () => {
                 <table className="table table-striped table-hover">
                   <thead>
                     <tr>
-                      <th>Emp ID</th>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Phone</th>
-                      <th>Designation</th>
-                      <th>Joining Date</th>
+                      <th>Journal ID</th>
+                      <th>Title</th>
+                      <th>Category</th>
+                      <th>ISSN Number</th>
+                      <th>Created Date</th>
                       <th>Status</th>
+                      <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {paginatedData.length > 0 ? (
                       paginatedData.map((row, idx) => (
                         <tr key={idx}>
-                          <td>{row.empId}</td>
-                          <td>{row.name}</td>
-                          <td>{row.email}</td>
-                          <td>{row.phone}</td>
-                          <td>{row.designation}</td>
-                          <td>{row.joiningDate}</td>
+                          <td>{row.journalId}</td>
+                          <td>{row.journalTitle || '-'}</td>
+                          <td>{row.journalCategory || '-'}</td>
+                          <td>{row.journalISSN || '-'}</td>
+                          <td>{new Date(row.createdAt).toLocaleDateString()}</td>
                           <td>
-                            <span className={`badge ${row.status === 'Active' ? 'badge-success' : 'badge-warning'}`}>
+                            <span className={`badge ${row.status.toLowerCase() === 'active' ? 'badge-success' : 'badge-warning'}`}>
                               ● {row.status}
                             </span>
+                          </td>
+                          <td>
+                            <div style={{ display: "flex", gap: "10px" }}>
+                              <span title="View"><Eye size={18} color="#3e99a8ff" onClick={() => handleView(row)} /></span>
+                              <span title="Edit"><Edit size={18} color="#e1b225ff" onClick={() => handleEdit(row)} /></span>
+                              <span title="Delete"><Trash2 size={18} color="#bd3846ff" onClick={() => handleDelete(row)} /></span>
+                            </div>
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td style={{ textAlign: 'center', padding: '20px' }}>
-                          No records found
-                        </td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        <td colSpan={7} style={{ textAlign: 'center', padding: '20px' }}>No records found</td>
                       </tr>
                     )}
                   </tbody>
                 </table>
-
-                {/* Pagination Info and Controls */}
+                {/* Pagination */}
                 <div className="pagination-info" style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '14px', color: '#666' }}>
                     Showing {paginatedData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to{' '}
@@ -190,7 +160,7 @@ const Onboarding = () => {
                   </span>
 
                   <div className="pagination" style={{ display: 'flex', gap: '5px' }}>
-                    
+                    {/* Previous Button */}
                     <button
                       onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                       disabled={currentPage === 1}
@@ -207,6 +177,7 @@ const Onboarding = () => {
                       Previous
                     </button>
 
+                    {/* Page Numbers */}
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                       <button
                         key={page}
@@ -225,6 +196,7 @@ const Onboarding = () => {
                       </button>
                     ))}
 
+                    {/* Next Button */}
                     <button
                       onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                       disabled={currentPage === totalPages}
@@ -240,7 +212,6 @@ const Onboarding = () => {
                     >
                       Next
                     </button>
-                    
                   </div>
                 </div>
               </div>
@@ -252,4 +223,4 @@ const Onboarding = () => {
   );
 };
 
-export default Onboarding;
+export default JournalsPage;

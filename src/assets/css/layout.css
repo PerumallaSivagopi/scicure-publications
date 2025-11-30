@@ -16,6 +16,19 @@
   --text-dark: var(--theme-navy);        
   --text-light: #B8C6D6;              
   --nav-text: #ffffff;                 
+
+  --surface: #ffffff;
+  --page-bg: #fafafa;
+}
+
+html[data-theme="dark"] {
+  --header-bg: #1f2937;
+  --border: rgba(255,255,255,0.12);
+  --text-dark: #e5e7eb;
+  --text-light: #94a3b8;
+  --nav-text: #e5e7eb;
+  --surface: #111827;
+  --page-bg: #0f172a;
 }
 
 /* Header */
@@ -47,7 +60,7 @@
   height: 36px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: #fff;
+  background: var(--surface);
   color: var(--primary); /* Royal Blue */
   transition: 0.2s ease;
 }
@@ -106,7 +119,7 @@
   padding: 8px 12px;
   min-width: 420px;
   max-width: 640px;
-  background: #fff;
+  background: var(--surface);
   transition: 0.2s ease;
 }
 
@@ -163,6 +176,7 @@
   z-index: 20;
   transform: translateX(0);
   transition: transform .2s ease;
+  border-radius: 0 25px 25px 0;
 }
 
 .app-sidebar.open {
@@ -171,20 +185,24 @@
 
 .sidebar-brand {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
+  flex-direction: row;   /* Make items side-by-side */
+  align-items: center;   /* Vertically center logo + text */
   border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-  /* padding: 20px 0; Increased padding slightly */
+  padding: 15px 0;
 }
 
 .sidebar-brand img {
-  width: 200px;
-  height: 65px;
+  width: 60px;           /* Reduce size so it aligns well */
+  height: 60px;
   border-radius: 8px;
-  margin: 10px;
-  /* background: #fff; */
+  margin: 0;
   padding: 4px;
+}
+
+.sidebar-brand h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
 }
 
 .sidebar-brand .brand-name {

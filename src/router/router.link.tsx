@@ -1,7 +1,7 @@
 import React from 'react'
 import { Route, Navigate } from 'react-router-dom'
 import { all_routes } from './all_routes'
-import { Login, AdminDashboard, ArticlePage, EditorsBoard, EditorsChief, JournalsPage, NotificationsPage, ReviewersPage, SettingsPage, AuthorsPage } from './lazyRoutes'
+import { Login, AdminDashboard, ArticlePage, EditorsBoard, EditorsChief, JournalsPage, NotificationsPage, ManuscriptsPage, SettingsPage, AuthorsPage } from './lazyRoutes'
 
 const routes = all_routes
 
@@ -55,9 +55,9 @@ export const publicRoutes = [
     route: Route,
   },
   {
-    path: routes.reviewers,
-    name: 'Reviewers',
-    element: <ReviewersPage />,
+    path: routes.manuscripts,
+    name: 'Manuscripts',
+    element: <ManuscriptsPage />,
     route: Route,
   },
   {

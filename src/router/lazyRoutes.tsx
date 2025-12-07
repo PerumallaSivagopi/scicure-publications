@@ -21,5 +21,5 @@ export const EditorsBoard = createLazyComponent(() => import('../feature-module/
 export const EditorsChief = createLazyComponent(() => import('../feature-module/pages/editorsChief'))
 export const JournalsPage = createLazyComponent(() => import('../feature-module/pages/journals'))
 export const NotificationsPage = createLazyComponent(() => import('../feature-module/pages/notifications'))
-export const ReviewersPage = createLazyComponent(() => import('../feature-module/pages/reviewers'))
+export const ManuscriptsPage = createLazyComponent(() => import('../feature-module/pages/manuscripts'))
 export const SettingsPage = createLazyComponent(() => import('../feature-module/pages/settings'))

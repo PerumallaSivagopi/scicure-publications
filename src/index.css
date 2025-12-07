@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* app-level custom tweaks can be added below if needed */
 
@@ -106,3 +104,4 @@ body.dark {
 {
   margin-top: 20px;
 }
+

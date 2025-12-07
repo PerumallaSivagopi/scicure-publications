@@ -1,82 +1,92 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import '../../assets/css/onboarding.css';
+import React, { useState, useEffect, useMemo } from "react";
+import "../../assets/css/onboarding.css";
 import { Eye, Edit, Trash2 } from "lucide-react";
 
-interface Article {
+interface Manuscript {
   _id?: string;
-  articleId?: string;
-  articleTitle?: string;
+  authorName?: string;
+  email?: string;
+  mobile?: string;
+  postalAddress?: string;
+  country?: string;
+
   journalId?: {
-    _id?: string;
     journalName?: string;
     journalId?: string;
+    _id?: string;
   };
-  authorName?: string;
-  authorEmail?: string;
+
   articleType?: string;
+  menuscriptTitle?: string;
   abstract?: string;
-  keywords?: string;
-  doiNumber?: string;
-  submissionDate?: string;
-  volumeNumber?: string;
-  issueNumber?: string;
   manuscriptFile?: string;
-  coverImage?: string;
-  articleStatus?: string;
-  publisherName?: string;
-  date?: string;
 }
 
-const ArticlePage = () => {
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+const ManuscriptsPage = () => {
+  const [editors, setEditors] = useState<Manuscript[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const token = localStorage.getItem("authToken") || "";
-    fetch('https://scicure-publications-backend-1.onrender.com/api/articles', {
-      method: "GET",
-      headers: {
-        "content-type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-    })
-      .then(res => res.json())
-      .then(result => {
+    fetch("https://scicure-publications-backend-1.onrender.com/api/manuscripts",
+      {
+        method: "GET",
+        headers: {
+          "content-type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+      }
+    )
+      .then((res) => res.json())
+      .then((result) => {
         if (Array.isArray(result)) {
-          setArticles(result);
+          setEditors(result);
         } else {
-          setArticles([]);
+          setEditors([]);
         }
       })
-      .catch(err => {
-        console.error("Error fetching articles:", err);
-        setArticles([]);
+      .catch((err) => {
+        console.error("Error fetching editors:", err);
+        setEditors([]);
       });
   }, []);
 
-  const handleView = (row: Article) => console.log("View clicked", row);
-  const handleEdit = (row: Article) => console.log("Edit clicked", row);
-  const handleDelete = (row: Article) => {
-    if (window.confirm("Are you sure you want to delete this article?")) {
+  const handleView = (row: Manuscript) => console.log("View clicked", row);
+  const handleEdit = (row: Manuscript) => console.log("Edit clicked", row);
+  const handleDelete = (row: Manuscript) => {
+    if (window.confirm("Are you sure you want to delete this editor?")) {
       console.log("Deleted", row);
     }
   };
 
-  // Filter
+  // Search filter including nested journalName
   const filteredData = useMemo(() => {
-    if (!searchTerm) return articles;
+    if (!searchTerm) return editors;
 
     const term = searchTerm.toLowerCase();
 
-    return articles.filter(item =>
-      JSON.stringify(item).toLowerCase().includes(term)
-    );
-  }, [searchTerm, articles]);
+    return editors.filter((item) => {
+      const term = searchTerm.toLowerCase();
+
+      return (
+        item.authorName?.toLowerCase().includes(term) ||
+        item.email?.toLowerCase().includes(term) ||
+        item.mobile?.toLowerCase().includes(term) ||
+        item.country?.toLowerCase().includes(term) ||
+        item.postalAddress?.toLowerCase().includes(term) ||
+        item.articleType?.toLowerCase().includes(term) ||
+        item.menuscriptTitle?.toLowerCase().includes(term) ||
+        item.journalId?.journalName?.toLowerCase().includes(term)
+      );
+    });
+
+  }, [searchTerm, editors]);
 
   // Pagination
   const totalPages = Math.ceil(filteredData.length / pageSize);
+
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     return filteredData.slice(startIndex, startIndex + pageSize);
@@ -85,26 +95,27 @@ const ArticlePage = () => {
   return (
     <div className="page-wrapper">
       <div className="content container-fluid">
-        
         <div className="page-header">
           <div className="row align-items-center">
             <div className="col">
-              <h3 className="page-title">Articles</h3>
+              <h3 className="page-title">Manuscripts</h3>
               <ul className="breadcrumb">
-                <li className="breadcrumb-item"><a href="/index">Dashboard</a></li>
-                <li className="breadcrumb-item active">Articles</li>
+                <li className="breadcrumb-item">
+                  <a href="/index">Dashboard</a>
+                </li>
+                <li className="breadcrumb-item active">Manuscripts</li>
               </ul>
             </div>
           </div>
         </div>
 
-        {/* TABLE SECTION */}
+        {/* Editors Table */}
         <div className="row">
           <div className="col-md-12">
             <div className="card">
               <div className="card-body">
 
-                {/* Search & Entries */}
+                {/* Search + Entries */}
                 <div
                   className="table-controls"
                   style={{
@@ -153,19 +164,20 @@ const ArticlePage = () => {
 
                 {/* TABLE */}
                 <div className="overflow-x-auto">
-                  <table className="table table-striped table-hover" style={{ whiteSpace: "nowrap" }}>
+                  <table
+                    className="table table-striped table-hover"
+                    style={{ whiteSpace: "nowrap" }}
+                  >
                     <thead>
                       <tr>
-                        <th>S.no</th>
-                        <th>Article ID</th>
-                        <th>Journal Name</th>
-                        <th>Article Title</th>
-                        <th>Author Name</th>
+                        <th>S.No</th>
+                        <th>Author</th>
                         <th>Email</th>
-                        <th>Type</th>
-                        <th>Volume/Issue</th>
-                        <th>Submission Date</th>
-                        <th>Status</th>
+                        <th>Mobile</th>
+                        <th>Country</th>
+                        <th>Journal Name</th>
+                        <th>Manuscript Title</th>
+                        <th>Manuscript Type</th>
                         <th>PDF</th>
                         <th>Action</th>
                       </tr>
@@ -176,43 +188,25 @@ const ArticlePage = () => {
                         paginatedData.map((row, index) => (
                           <tr key={row._id || index}>
                             <td>{(currentPage - 1) * pageSize + index + 1}</td>
-                            <td>{row.articleId || "-"}</td>
-                            <td>{row.journalId?.journalName || "-"}</td>
-                            <td>{row.articleTitle || "-"}</td>
                             <td>{row.authorName || "-"}</td>
-                            <td>{row.authorEmail || "-"}</td>
+                            <td>{row.email || "-"}</td>
+                            <td>{row.mobile || "-"}</td>
+                            <td>{row.country || "-"}</td>
+
+                            <td>{row.journalId?.journalName || "-"}</td>
+
+                            <td>{row.menuscriptTitle || "-"}</td>
                             <td>{row.articleType || "-"}</td>
-                            <td>
-                              {row.volumeNumber || "-"} / {row.issueNumber || "-"}
-                            </td>
-
-                            <td>
-                              {row.submissionDate
-                                ? new Date(row.submissionDate).toLocaleDateString()
-                                : "-"}
-                            </td>
-
-                            <td>
-                              <span
-                                className={`badge ${
-                                  row.articleStatus === "Accepted"
-                                    ? "badge-success"
-                                    : "badge-warning"
-                                }`}
-                              >
-                                {row.articleStatus || "-"}
-                              </span>
-                            </td>
 
                             <td>
                               {row.manuscriptFile ? (
                                 <a
-                                  href={`https://scicure-publications-backend-1.onrender.com/uploads/${row.manuscriptFile}`}
+                                  href={`https://scicure-publications-backend-1.onrender.com/upload/${row.manuscriptFile}`}
                                   target="_blank"
-                                  rel="noreferrer"
-                                  style={{ color: "#3e99a8" }}
+                                  rel="noopener noreferrer"
+                                  style={{ color: "#007bff", textDecoration: "underline" }}
                                 >
-                                  View
+                                  View File
                                 </a>
                               ) : (
                                 "-"
@@ -230,45 +224,62 @@ const ArticlePage = () => {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={12} style={{ textAlign: "center", padding: 20 }}>
+                          <td colSpan={10} style={{ textAlign: "center", padding: 20 }}>
                             No records found
                           </td>
                         </tr>
                       )}
                     </tbody>
+
                   </table>
                 </div>
 
                 {/* Pagination */}
-                <div style={{ marginTop: 20, display: "flex", justifyContent: "space-between" }}>
+                <div
+                  style={{
+                    marginTop: 20,
+                    display: "flex",
+                    justifyContent: "space-between",
+                  }}
+                >
                   <span>
                     Showing{" "}
-                    {paginatedData.length ? (currentPage - 1) * pageSize + 1 : 0}{" "}
-                    to {Math.min(currentPage * pageSize, filteredData.length)} of{" "}
+                    {paginatedData.length
+                      ? (currentPage - 1) * pageSize + 1
+                      : 0}{" "}
+                    to{" "}
+                    {Math.min(currentPage * pageSize, filteredData.length)} of{" "}
                     {filteredData.length} entries
                   </span>
 
                   <div style={{ display: "flex", gap: 5 }}>
                     <button
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      onClick={() =>
+                        setCurrentPage((p) => Math.max(1, p - 1))
+                      }
                       disabled={currentPage === 1}
                       className="paginate_button"
                     >
                       Previous
                     </button>
 
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`paginate_button ${page === currentPage ? "current" : ""}`}
-                      >
-                        {page}
-                      </button>
-                    ))}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (page) => (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`paginate_button ${page === currentPage ? "current" : ""
+                            }`}
+                        >
+                          {page}
+                        </button>
+                      )
+                    )}
 
                     <button
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
                       disabled={currentPage === totalPages}
                       className="paginate_button"
                     >
@@ -287,4 +298,6 @@ const ArticlePage = () => {
   );
 };
 
-export default ArticlePage;
+export default ManuscriptsPage;
+
+

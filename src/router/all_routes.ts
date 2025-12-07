@@ -6,7 +6,7 @@ export const all_routes = {
   editorsChief: '/editors-chief',
   journals: '/journals',
   notifications: '/notifications',
-  reviewers: '/reviewers',
+  manuscripts: '/manuscripts',
   settings: '/settings',
   authors: '/authors',
 }

@@ -35,10 +35,10 @@ const Sidebar = () => {
         <NavIcon to={all_routes.index} icon="ti-home" label="Dashboard" />
         <NavIcon to={all_routes.journals} icon="ti-book" label="Journals" />
         <NavIcon to={all_routes.article} icon="ti-files" label="Article" />
-        {/* <NavIcon to={all_routes.editorsChief} icon="ti-crown" label="Editors Chief" />
-        <NavIcon to={all_routes.editorsBoard} icon="ti-id-badge" label="Editors Board" /> */}
-        <NavIcon to={all_routes.authors} icon="ti-pencil" label="Authors" />
-        <NavIcon to={all_routes.reviewers} icon="ti-user-check" label="Reviewers" />
+        {/* <NavIcon to={all_routes.editorsChief} icon="ti-crown" label="Editors Chief" /> */}
+        <NavIcon to={all_routes.editorsBoard} icon="ti-user-check" label="Editors Board" />
+        {/* <NavIcon to={all_routes.authors} icon="ti-pencil" label="Authors" /> */}
+        <NavIcon to={all_routes.manuscripts} icon="ti-id-badge" label="Manuscripts" />
         <NavIcon to={all_routes.notifications} icon="ti-bell" label="Notifications" />
         <NavIcon to={all_routes.settings} icon="ti-settings" label="Settings" />
       </nav>

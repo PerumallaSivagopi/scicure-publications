@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import '../../assets/css/onboarding.css';
-import { Eye, Edit, Trash2 } from "lucide-react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import "../../assets/css/onboarding.css";
+import { Eye, Edit, Trash2, Check, X, Upload, Plus } from "lucide-react";
+import { URLS, ImageUrl } from "../../Urls";
+import Modal from "../../components/ui/Modal";
 
 interface Article {
   _id?: string;
   articleId?: string;
   articleTitle?: string;
-  journalId?: {
+  journalId?: string | {
     _id?: string;
     journalName?: string;
     journalId?: string;
@@ -18,51 +20,269 @@ interface Article {
   keywords?: string;
   doiNumber?: string;
   submissionDate?: string;
+  acceptanceDate?: string;
+  publicationDate?: string;
   volumeNumber?: string;
   issueNumber?: string;
   manuscriptFile?: string;
   coverImage?: string;
   articleStatus?: string;
   publisherName?: string;
-  date?: string;
+  // date?: string; 
+}
+
+interface Journal {
+  _id: string;
+  journalName?: string;
+  username?: string;
+  role?: string;
 }
 
 const ArticlePage = () => {
   const [articles, setArticles] = useState<Article[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [journals, setJournals] = useState<Journal[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
-  useEffect(() => {
+  // Modal States
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  
+  // Form State
+  const [newArticle, setNewArticle] = useState({
+    articleTitle: "",
+    journalId: "",
+    authorName: "",
+    authorEmail: "",
+    articleType: "",
+    abstract: "",
+    keywords: "",
+    doiNumber: "",
+    submissionDate: "",
+    acceptanceDate: "",
+    publicationDate: "",
+    volumeNumber: "",
+    issueNumber: "",
+    publisherName: "SciCure Publications",
+    articleStatus: "Under Review",
+  });
+
+  // File states (separate because they are files, not strings)
+  const [manuscriptFile, setManuscriptFile] = useState<File | null>(null);
+  const [coverImage, setCoverImage] = useState<File | null>(null);
+
+  // Refs for file inputs
+  const manuscriptInputRef = useRef<HTMLInputElement>(null);
+  const coverImageInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch Articles
+  const fetchArticles = () => {
     const token = localStorage.getItem("authToken") || "";
-    fetch('https://scicure-publications-backend-1.onrender.com/api/articles', {
+    fetch(URLS.ARTICLES, {
       method: "GET",
       headers: {
         "content-type": "application/json",
         "Authorization": `Bearer ${token}`,
       },
     })
-      .then(res => res.json())
-      .then(result => {
+      .then((res) => res.json())
+      .then((result) => {
         if (Array.isArray(result)) {
           setArticles(result);
         } else {
           setArticles([]);
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error fetching articles:", err);
         setArticles([]);
       });
+  };
+
+  // Fetch Journals
+  const fetchJournals = () => {
+    const token = localStorage.getItem("authToken") || "";
+    fetch(URLS.USERS, {
+      method: "GET",
+      headers: {
+        "content-type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((result) => {
+        if (result.data && Array.isArray(result.data)) {
+            // Filter for journals
+            const journalData = result.data.filter((item: Journal) => item.role === 'journal');
+            setJournals(journalData);
+        }
+      })
+      .catch((err) => console.error("Error fetching journals:", err));
+  };
+
+
+  useEffect(() => {
+    fetchArticles();
+    fetchJournals();
   }, []);
 
-  const handleView = (row: Article) => console.log("View clicked", row);
-  const handleEdit = (row: Article) => console.log("Edit clicked", row);
+  const resetForm = () => {
+    setNewArticle({
+      articleTitle: "",
+      journalId: "",
+      authorName: "",
+      authorEmail: "",
+      articleType: "",
+      abstract: "",
+      keywords: "",
+      doiNumber: "",
+      submissionDate: "",
+      acceptanceDate: "",
+      publicationDate: "",
+      volumeNumber: "",
+      issueNumber: "",
+      publisherName: "SciCure Publications",
+      articleStatus: "Under Review",
+    });
+    setManuscriptFile(null);
+    setCoverImage(null);
+    setSelectedArticle(null);
+    setIsEditMode(false);
+    if (manuscriptInputRef.current) manuscriptInputRef.current.value = "";
+    if (coverImageInputRef.current) coverImageInputRef.current.value = "";
+  };
+
+  const handleEdit = (row: Article) => {
+    let jId: string = "";
+    if (typeof row.journalId === 'object' && row.journalId !== null) {
+      jId = row.journalId._id || "";
+    } else {
+      jId = row.journalId as string;
+    }
+
+    setNewArticle({
+      articleTitle: row.articleTitle || "",
+      journalId: jId,
+      authorName: row.authorName || "",
+      authorEmail: row.authorEmail || "",
+      articleType: row.articleType || "",
+      abstract: row.abstract || "",
+      keywords: row.keywords || "",
+      doiNumber: row.doiNumber || "",
+      submissionDate: row.submissionDate ? new Date(row.submissionDate).toISOString().split('T')[0] : "",
+      acceptanceDate: row.acceptanceDate ? new Date(row.acceptanceDate).toISOString().split('T')[0] : "",
+      publicationDate: row.publicationDate ? new Date(row.publicationDate).toISOString().split('T')[0] : "",
+      volumeNumber: row.volumeNumber || "",
+      issueNumber: row.issueNumber || "",
+      publisherName: row.publisherName || "SciCure Publications",
+      articleStatus: row.articleStatus || "Under Review",
+    });
+
+    // Reset files as we don't editing files directly this way usually, or implement preview
+    setManuscriptFile(null);
+    setCoverImage(null);
+    
+    setSelectedArticle(row);
+    setIsEditMode(true);
+    setIsAddModalOpen(true);
+  };
+
+  const handleView = (row: Article) => {
+    setSelectedArticle(row);
+    setIsViewModalOpen(true);
+  };
+
   const handleDelete = (row: Article) => {
-    if (window.confirm("Are you sure you want to delete this article?")) {
-      console.log("Deleted", row);
+    setSelectedArticle(row);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedArticle) return;
+    
+    try {
+        const token = localStorage.getItem("authToken") || "";
+        const response = await fetch(`${URLS.ARTICLES}/${selectedArticle._id}`, {
+            method: 'DELETE',
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            }
+        });
+
+        if (response.ok) {
+            alert("Article deleted successfully");
+            fetchArticles();
+        } else {
+            alert("Failed to delete article");
+        }
+    } catch (error) {
+        console.error("Error deleting article:", error);
+        alert("Error deleting article");
+    } finally {
+        setIsDeleteModalOpen(false);
+        setSelectedArticle(null);
+    }
+};
+
+  const handleSave = async () => {
+    // Validation
+    if (!newArticle.articleTitle || !newArticle.journalId || !newArticle.authorName || !newArticle.authorEmail) {
+      alert("Please fill in required fields (Title, Journal, Author Name, Email)");
+      return;
+    }
+    
+    if (!isEditMode && !manuscriptFile) {
+        alert("Manuscript file is required for new articles");
+        return;
+    }
+
+    const formData = new FormData();
+    Object.entries(newArticle).forEach(([key, value]) => {
+        formData.append(key, value);
+    });
+
+    if (manuscriptFile) formData.append("manuscriptFile", manuscriptFile);
+    if (coverImage) formData.append("coverImage", coverImage);
+
+    const token = localStorage.getItem("authToken") || "";
+    let url = URLS.ARTICLES;
+    let method = "POST";
+
+    if (isEditMode && selectedArticle) {
+      url = `${URLS.ARTICLES}/${selectedArticle._id}`;
+      method = "PUT";
+    }
+
+    try {
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                // No Content-Type header when sending FormData; browser sets it with boundary
+            },
+            body: formData
+        });
+
+        if (response.ok) {
+            alert(isEditMode ? "Article updated successfully!" : "Article added successfully!");
+            setIsAddModalOpen(false);
+            resetForm();
+            fetchArticles();
+        } else {
+            const err = await response.json();
+            alert(`Failed to save article: ${err.message || "Unknown error"}`);
+        }
+    } catch (error) {
+        console.error("Error saving article:", error);
+        alert("Error saving article");
     }
   };
+
 
   // Filter
   const filteredData = useMemo(() => {
@@ -70,8 +290,10 @@ const ArticlePage = () => {
 
     const term = searchTerm.toLowerCase();
 
-    return articles.filter(item =>
-      JSON.stringify(item).toLowerCase().includes(term)
+    return articles.filter((item) =>
+      item.articleTitle?.toLowerCase().includes(term) ||
+      item.authorName?.toLowerCase().includes(term) ||
+      (typeof item.journalId === 'object' && (item.journalId as any)?.journalName?.toLowerCase().includes(term))
     );
   }, [searchTerm, articles]);
 
@@ -85,15 +307,25 @@ const ArticlePage = () => {
   return (
     <div className="page-wrapper">
       <div className="content container-fluid">
-        
         <div className="page-header">
           <div className="row align-items-center">
-            <div className="col">
-              <h3 className="page-title">Articles</h3>
-              <ul className="breadcrumb">
-                <li className="breadcrumb-item"><a href="/index">Dashboard</a></li>
-                <li className="breadcrumb-item active">Articles</li>
-              </ul>
+            <div className="col flex justify-between items-center">
+              <div>
+                <h3 className="page-title">Articles</h3>
+                <ul className="breadcrumb">
+                  <li className="breadcrumb-item">
+                    <a href="/index">Dashboard</a>
+                  </li>
+                  <li className="breadcrumb-item active">Articles</li>
+                </ul>
+              </div>
+              <button
+                className="px-4 py-2 bg-[#00467F] text-white rounded-lg flex items-center gap-2 hover:bg-[#031E40] transition-colors"
+                onClick={() => { resetForm(); setIsAddModalOpen(true); }}
+              >
+                <Plus size={18} />
+                Add Article
+              </button>
             </div>
           </div>
         </div>
@@ -103,7 +335,6 @@ const ArticlePage = () => {
           <div className="col-md-12">
             <div className="card">
               <div className="card-body">
-
                 {/* Search & Entries */}
                 <div
                   className="table-controls"
@@ -153,7 +384,10 @@ const ArticlePage = () => {
 
                 {/* TABLE */}
                 <div className="overflow-x-auto">
-                  <table className="table table-striped table-hover" style={{ whiteSpace: "nowrap" }}>
+                  <table
+                    className="table table-striped table-hover"
+                    style={{ whiteSpace: "nowrap" }}
+                  >
                     <thead>
                       <tr>
                         <th>S.no</th>
@@ -161,10 +395,7 @@ const ArticlePage = () => {
                         <th>Journal Name</th>
                         <th>Article Title</th>
                         <th>Author Name</th>
-                        <th>Email</th>
                         <th>Type</th>
-                        <th>Volume/Issue</th>
-                        <th>Submission Date</th>
                         <th>Status</th>
                         <th>PDF</th>
                         <th>Action</th>
@@ -177,26 +408,24 @@ const ArticlePage = () => {
                           <tr key={row._id || index}>
                             <td>{(currentPage - 1) * pageSize + index + 1}</td>
                             <td>{row.articleId || "-"}</td>
-                            <td>{row.journalId?.journalName || "-"}</td>
+                            <td>
+                                {typeof row.journalId === 'object' 
+                                    ? (row.journalId as any)?.journalName 
+                                    : "-"}
+                            </td>
                             <td>{row.articleTitle || "-"}</td>
                             <td>{row.authorName || "-"}</td>
-                            <td>{row.authorEmail || "-"}</td>
                             <td>{row.articleType || "-"}</td>
-                            <td>
-                              {row.volumeNumber || "-"} / {row.issueNumber || "-"}
-                            </td>
-
-                            <td>
-                              {row.submissionDate
-                                ? new Date(row.submissionDate).toLocaleDateString()
-                                : "-"}
-                            </td>
 
                             <td>
                               <span
                                 className={`badge ${
                                   row.articleStatus === "Accepted"
                                     ? "badge-success"
+                                    : row.articleStatus === "Published"
+                                    ? "badge-info"
+                                    : row.articleStatus === "Rejected"
+                                    ? "badge-danger"
                                     : "badge-warning"
                                 }`}
                               >
@@ -207,10 +436,10 @@ const ArticlePage = () => {
                             <td>
                               {row.manuscriptFile ? (
                                 <a
-                                  href={`https://scicure-publications-backend-1.onrender.com/uploads/${row.manuscriptFile}`}
+                                  href={`${ImageUrl}${row.manuscriptFile}`}
                                   target="_blank"
                                   rel="noreferrer"
-                                  style={{ color: "#3e99a8" }}
+                                  style={{ color: "#3e99a8", textDecoration: "underline" }}
                                 >
                                   View
                                 </a>
@@ -221,16 +450,34 @@ const ArticlePage = () => {
 
                             <td>
                               <div style={{ display: "flex", gap: 10 }}>
-                                <Eye size={18} color="#3e99a8" onClick={() => handleView(row)} />
-                                <Edit size={18} color="#e1b225" onClick={() => handleEdit(row)} />
-                                <Trash2 size={18} color="#bd3846" onClick={() => handleDelete(row)} />
+                                <Eye
+                                  size={18}
+                                  color="#3e99a8"
+                                  onClick={() => handleView(row)}
+                                  style={{ cursor: "pointer" }}
+                                />
+                                <Edit
+                                  size={18}
+                                  color="#e1b225"
+                                  onClick={() => handleEdit(row)}
+                                  style={{ cursor: "pointer" }}
+                                />
+                                <Trash2
+                                  size={18}
+                                  color="#bd3846"
+                                  onClick={() => handleDelete(row)}
+                                  style={{ cursor: "pointer" }}
+                                />
                               </div>
                             </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={12} style={{ textAlign: "center", padding: 20 }}>
+                          <td
+                            colSpan={9}
+                            style={{ textAlign: "center", padding: 20 }}
+                          >
                             No records found
                           </td>
                         </tr>
@@ -240,11 +487,20 @@ const ArticlePage = () => {
                 </div>
 
                 {/* Pagination */}
-                <div style={{ marginTop: 20, display: "flex", justifyContent: "space-between" }}>
+                <div
+                  style={{
+                    marginTop: 20,
+                    display: "flex",
+                    justifyContent: "space-between",
+                  }}
+                >
                   <span>
                     Showing{" "}
-                    {paginatedData.length ? (currentPage - 1) * pageSize + 1 : 0}{" "}
-                    to {Math.min(currentPage * pageSize, filteredData.length)} of{" "}
+                    {paginatedData.length
+                      ? (currentPage - 1) * pageSize + 1
+                      : 0}{" "}
+                    to{" "}
+                    {Math.min(currentPage * pageSize, filteredData.length)} of{" "}
                     {filteredData.length} entries
                   </span>
 
@@ -257,18 +513,24 @@ const ArticlePage = () => {
                       Previous
                     </button>
 
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`paginate_button ${page === currentPage ? "current" : ""}`}
-                      >
-                        {page}
-                      </button>
-                    ))}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (page) => (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`paginate_button ${
+                            page === currentPage ? "current" : ""
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      )
+                    )}
 
                     <button
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
                       disabled={currentPage === totalPages}
                       className="paginate_button"
                     >
@@ -276,13 +538,389 @@ const ArticlePage = () => {
                     </button>
                   </div>
                 </div>
-
               </div>
             </div>
           </div>
         </div>
-
       </div>
+
+       {/* Add/Edit Modal */}
+       <Modal
+        isOpen={isAddModalOpen}
+        onClose={() => { setIsAddModalOpen(false); resetForm(); }}
+        title={isEditMode ? "Edit Article" : "Add New Article"}
+        maxWidth="max-w-4xl"
+        footer={
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsAddModalOpen(false)}
+              className="px-5 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 focus:ring-2 focus:ring-gray-200 outline-none"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-[#00467F] to-[#0078A8] rounded-xl hover:shadow-lg hover:shadow-blue-900/20 hover:from-[#031E40] hover:to-[#00467F] transition-all duration-200 transform hover:-translate-y-0.5 focus:ring-2 focus:ring-[#00467F] outline-none"
+            >
+              {isEditMode ? "Update Article" : "Save Article"}
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-5">
+           {/* Section 1: Basic Info */}
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+             <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Article Title *</label>
+                <input
+                    type="text"
+                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                    value={newArticle.articleTitle}
+                    onChange={(e) => setNewArticle({ ...newArticle, articleTitle: e.target.value })}
+                />
+             </div>
+             <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Journal *</label>
+                <select
+                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white appearance-none"
+                    value={newArticle.journalId}
+                    onChange={(e) => setNewArticle({ ...newArticle, journalId: e.target.value })}
+                >
+                    <option value="">Select Journal</option>
+                    {journals.map((journal) => (
+                    <option key={journal._id} value={journal._id}>
+                        {journal.journalName || journal.username || "Unknown Journal"}
+                    </option>
+                    ))}
+                </select>
+             </div>
+           </div>
+
+           {/* Section 2: Author Info */}
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+             <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Author Name *</label>
+                <input
+                    type="text"
+                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                    value={newArticle.authorName}
+                    onChange={(e) => setNewArticle({ ...newArticle, authorName: e.target.value })}
+                />
+             </div>
+              <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Author Email *</label>
+                <input
+                    type="email"
+                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                    value={newArticle.authorEmail}
+                    onChange={(e) => setNewArticle({ ...newArticle, authorEmail: e.target.value })}
+                />
+             </div>
+           </div>
+
+           {/* Section 3: Article Details */}
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+             <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Article Type</label>
+                <select
+                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white appearance-none"
+                    value={newArticle.articleType}
+                    onChange={(e) => setNewArticle({ ...newArticle, articleType: e.target.value })}
+                >
+                    <option value="">Select Type</option>
+                    <option value="Research">Research</option>
+                    <option value="Review">Review</option>
+                    <option value="Case Study">Case Study</option>
+                    <option value="Short Communication">Short Communication</option>
+                    <option value="Editorial">Editorial</option>
+                    <option value="Other">Other</option>
+                </select>
+             </div>
+              <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">DOI Number</label>
+                <input
+                    type="text"
+                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                    value={newArticle.doiNumber}
+                    onChange={(e) => setNewArticle({ ...newArticle, doiNumber: e.target.value })}
+                />
+             </div>
+           </div>
+           
+           <div className="relative">
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Keywords</label>
+            <input
+                type="text"
+                className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                value={newArticle.keywords}
+                onChange={(e) => setNewArticle({ ...newArticle, keywords: e.target.value })}
+                placeholder="Comma separated keywords"
+            />
+           </div>
+
+           <div className="relative">
+             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Abstract</label>
+             <textarea
+                className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                rows={3}
+                value={newArticle.abstract}
+                onChange={(e) => setNewArticle({ ...newArticle, abstract: e.target.value })}
+             />
+           </div>
+
+           {/* Section 4: Dates & Issue */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+             <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Submission Date</label>
+                <input
+                    type="date"
+                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                    value={newArticle.submissionDate}
+                    onChange={(e) => setNewArticle({ ...newArticle, submissionDate: e.target.value })}
+                />
+             </div>
+             <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Acceptance Date</label>
+                <input
+                    type="date"
+                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                    value={newArticle.acceptanceDate}
+                    onChange={(e) => setNewArticle({ ...newArticle, acceptanceDate: e.target.value })}
+                />
+             </div>
+             <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Publication Date</label>
+                <input
+                    type="date"
+                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                    value={newArticle.publicationDate}
+                    onChange={(e) => setNewArticle({ ...newArticle, publicationDate: e.target.value })}
+                />
+             </div>
+           </div>
+
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+             <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Volume</label>
+                <input
+                    type="text"
+                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                    value={newArticle.volumeNumber}
+                    onChange={(e) => setNewArticle({ ...newArticle, volumeNumber: e.target.value })}
+                />
+             </div>
+             <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Issue</label>
+                <input
+                    type="text"
+                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                    value={newArticle.issueNumber}
+                    onChange={(e) => setNewArticle({ ...newArticle, issueNumber: e.target.value })}
+                />
+             </div>
+             <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Status</label>
+                <select
+                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white appearance-none"
+                    value={newArticle.articleStatus}
+                    onChange={(e) => setNewArticle({ ...newArticle, articleStatus: e.target.value })}
+                >
+                    <option value="Under Review">Under Review</option>
+                    <option value="Accepted">Accepted</option>
+                    <option value="Published">Published</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+             </div>
+           </div>
+
+           {/* Section 5: File Uploads */}
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+             <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Manuscript File</label>
+                <div className="relative">
+                    <input
+                        type="file"
+                        className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        onChange={(e) => setManuscriptFile(e.target.files ? e.target.files[0] : null)}
+                        ref={manuscriptInputRef}
+                    />
+                </div>
+                {isEditMode && selectedArticle?.manuscriptFile && !manuscriptFile && (
+                    <p className="text-xs text-gray-500 mt-1">Current file: {selectedArticle.manuscriptFile}</p>
+                )}
+             </div>
+             <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Cover Image (Optional)</label>
+                <div className="relative">
+                    <input
+                        type="file"
+                        className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        accept="image/*"
+                         onChange={(e) => setCoverImage(e.target.files ? e.target.files[0] : null)}
+                        ref={coverImageInputRef}
+                    />
+                </div>
+                {isEditMode && selectedArticle?.coverImage && !coverImage && (
+                    <p className="text-xs text-gray-500 mt-1">Current image: {selectedArticle.coverImage}</p>
+                )}
+             </div>
+           </div>
+
+        </div>
+      </Modal>
+
+      {/* View Modal */}
+      <Modal
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        title="Article Details"
+        maxWidth="max-w-4xl"
+        footer={
+          <button
+            onClick={() => setIsViewModalOpen(false)}
+            className="px-5 py-2.5 text-sm font-medium text-white bg-[#00467F] rounded-xl hover:bg-[#031E40] transition-colors"
+          >
+            Close
+          </button>
+        }
+      >
+        {selectedArticle && (
+            <div className="space-y-6">
+                 <div className="border-b border-gray-100 pb-4 flex justify-between items-start">
+                    <div>
+                        <h4 className="text-xl font-bold text-[#00467F]">{selectedArticle.articleTitle}</h4>
+                        <p className="text-sm text-gray-500 mt-1">{selectedArticle.articleId} • {selectedArticle.articleType}</p>
+                    </div>
+                    <div>
+                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                  selectedArticle.articleStatus === "Accepted"
+                                    ? "bg-green-100 text-green-700"
+                                    : selectedArticle.articleStatus === "Published"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : selectedArticle.articleStatus === "Rejected"
+                                    ? "bg-red-100 text-red-700"
+                                    : "bg-yellow-100 text-yellow-700"
+                                }`}>
+                            {selectedArticle.articleStatus}
+                        </span>
+                    </div>
+                 </div>
+
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Journal</h5>
+                        <p className="text-sm font-medium">
+                            {typeof selectedArticle.journalId === 'object' 
+                             ? (selectedArticle.journalId as any)?.journalName 
+                             : "N/A"}
+                        </p>
+                    </div>
+                     <div>
+                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Author</h5>
+                        <p className="text-sm font-medium">{selectedArticle.authorName}</p>
+                        <p className="text-xs text-gray-500">{selectedArticle.authorEmail}</p>
+                    </div>
+                     <div>
+                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">DOI</h5>
+                         <p className="text-sm font-medium">{selectedArticle.doiNumber || "-"}</p>
+                    </div>
+                     <div>
+                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Volume / Issue</h5>
+                         <p className="text-sm font-medium">{selectedArticle.volumeNumber || "-"} / {selectedArticle.issueNumber || "-"}</p>
+                    </div>
+                 </div>
+
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <div>
+                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Submitted</h5>
+                        <p className="text-sm font-medium">{selectedArticle.submissionDate ? new Date(selectedArticle.submissionDate).toLocaleDateString() : "-"}</p>
+                    </div>
+                    <div>
+                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Accepted</h5>
+                        <p className="text-sm font-medium">{selectedArticle.acceptanceDate ? new Date(selectedArticle.acceptanceDate).toLocaleDateString() : "-"}</p>
+                    </div>
+                    <div>
+                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Published</h5>
+                        <p className="text-sm font-medium">{selectedArticle.publicationDate ? new Date(selectedArticle.publicationDate).toLocaleDateString() : "-"}</p>
+                    </div>
+                 </div>
+
+                 <div>
+                    <h5 className="text-xs font-semibold text-gray-500 uppercase mb-2">Abstract</h5>
+                    <p className="text-sm text-gray-700 leading-relaxed p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        {selectedArticle.abstract || "No abstract available."}
+                    </p>
+                 </div>
+                 
+                 <div>
+                    <h5 className="text-xs font-semibold text-gray-500 uppercase mb-2">Keywords</h5>
+                    <div className="flex flex-wrap gap-2">
+                        {selectedArticle.keywords ? selectedArticle.keywords.split(',').map((tag, i) => (
+                            <span key={i} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-lg">
+                                {tag.trim()}
+                            </span>
+                        )) : "-"}
+                    </div>
+                 </div>
+
+                  <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                     {selectedArticle.manuscriptFile && (
+                        <a
+                            href={`${ImageUrl}${selectedArticle.manuscriptFile}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+                        >
+                            View Manuscript
+                        </a>
+                     )}
+                     {selectedArticle.coverImage && (
+                        <a
+                            href={`${ImageUrl}${selectedArticle.coverImage}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+                        >
+                            View Cover Image
+                        </a>
+                     )}
+                  </div>
+            </div>
+        )}
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Confirm Delete"
+        footer={
+             <>
+                <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="px-5 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                Cancel
+                </button>
+                <button
+                onClick={confirmDelete}
+                className="px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors"
+                >
+                Delete
+                </button>
+             </>
+        }
+      >
+        <div className="py-2">
+           <p className="text-gray-600">Are you sure you want to delete this article? This action cannot be undone.</p>
+           {selectedArticle && (
+               <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-100">
+                   <p className="text-sm font-medium text-red-800">{selectedArticle.articleTitle}</p>
+                   <p className="text-xs text-red-600">{selectedArticle.articleId}</p>
+               </div>
+           )}
+        </div>
+      </Modal>
     </div>
   );
 };

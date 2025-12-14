@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import '../../assets/css/onboarding.css'; import { Eye, Edit, Trash2, User, Mail, Lock, Phone, Book, BookOpen, FileText, Tag, Upload, X } from "lucide-react";
+import { URLS, ImageUrl } from '../../Urls';
 import Modal from '../../components/ui/Modal';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
 
 interface Journal {
+  _id?: string;
   journalId: string;
   journalTitle: string;
   journalCategory: string;
@@ -13,6 +15,12 @@ interface Journal {
   createdAt: string;
   status: string;
   journalImage?: string;
+  journalName?: string;
+  journalDescription?: string;
+  userName?: string; // from User model
+  email?: string;    // from User model
+  mobile?: string;   // from User model
+  role?: string;
 }
 
 const JournalsPage = () => {
@@ -41,13 +49,19 @@ const JournalsPage = () => {
   const [journalImage, setJournalImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
+  // View/Delete State
+  const [selectedJournal, setSelectedJournal] = useState<Journal | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+
   useEffect(() => {
     fetchJournals();
   }, []);
 
   const fetchJournals = () => {
     const token = localStorage.getItem("authToken") || "";
-    fetch('https://scicure-publications-backend-1.onrender.com/api/users', {
+    fetch(URLS.USERS, {
       method: "GET",
       headers: {
         "content-type": "application/json",
@@ -94,10 +108,15 @@ const JournalsPage = () => {
 
   const handleSubmit = async () => {
     // Validation
-    if (!formData.userName || !formData.email || !formData.password || !formData.mobile ||
+    if (!formData.userName || !formData.email || !formData.mobile ||
       !formData.journalName || !formData.journalTitle || !formData.journalISSN) {
-      alert("Please fill in all required fields");
+      alert("Please fill in all required fields (Password is required only for new journals)");
       return;
+    }
+
+    if (!isEditMode && !formData.password) {
+        alert("Password is required for new journals");
+        return;
     }
 
     setIsSubmitting(true);
@@ -108,20 +127,31 @@ const JournalsPage = () => {
 
       data.append('userName', formData.userName);
       data.append('email', formData.email);
-      data.append('password', formData.password);
+      if (formData.password) data.append('password', formData.password); // Only append if provided
       data.append('mobile', formData.mobile);
       data.append('journalName', formData.journalName);
       data.append('journalTitle', formData.journalTitle);
       data.append('journalISSN', formData.journalISSN);
       data.append('journalCategory', formData.journalCategory);
       data.append('journalDescription', formData.journalDescription);
+      // Status is handled by backend or separate toggle usually, but sticking to existing logic if needed
+      // If we want to update status, we need to add it to formData or handle it separately.
+      // For now, assuming basic update.
 
       if (journalImage) {
         data.append('journalImage', journalImage);
       }
 
-      const response = await fetch('https://scicure-publications-backend-1.onrender.com/api/users/create', {
-        method: 'POST',
+      let url = `${URLS.USERS}/create`;
+      let method = 'POST';
+
+      if (isEditMode && selectedJournal) {
+        url = `${URLS.USERS}/update/${selectedJournal._id}`;
+        method = 'PUT';
+      }
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           "Authorization": `Bearer ${token}`,
         },
@@ -131,16 +161,16 @@ const JournalsPage = () => {
       const result = await response.json();
 
       if (response.ok) {
-        alert("Journal added successfully!");
+        alert(isEditMode ? "Journal updated successfully!" : "Journal added successfully!");
         setIsAddModalOpen(false);
         resetForm();
         fetchJournals();
       } else {
-        alert(result.message || "Failed to add journal");
+        alert(result.message || "Operation failed");
       }
     } catch (error) {
-      console.error("Error adding journal:", error);
-      alert("An error occurred while adding the journal");
+      console.error("Error saving journal:", error);
+      alert("An error occurred while saving the journal");
     } finally {
       setIsSubmitting(false);
     }
@@ -160,13 +190,70 @@ const JournalsPage = () => {
     });
     setJournalImage(null);
     setImagePreview(null);
+    setSelectedJournal(null);
+    setIsEditMode(false);
   };
 
-  const handleView = (row: Journal) => console.log("View clicked", row);
-  const handleEdit = (row: Journal) => console.log("Edit clicked", row);
+  const handleView = (row: Journal) => {
+    setSelectedJournal(row);
+    setIsViewModalOpen(true);
+  };
+
+  const handleEdit = (row: any) => { // Using any to access all fields from backend response easily without strict typing for now
+    setSelectedJournal(row);
+    setFormData({
+      userName: row.userName || '',
+      email: row.email || '',
+      password: '', // Password not shown
+      mobile: row.mobile || '',
+      journalName: row.journalName || '',
+      journalTitle: row.journalTitle || '',
+      journalISSN: row.journalISSN || '',
+      journalCategory: row.journalCategory || '',
+      journalDescription: row.journalDescription || ''
+    });
+    if (row.journalImage) {
+         // Assuming backend returns full path or filename. If filename, construct path.
+         // Based on other code, it might be just filename. But let's check view.
+         // Set preview if possible. For now, just setting it if it's a full URL or construct it.
+         setImagePreview(`${ImageUrl}${row.journalImage}`);
+    } else {
+        setImagePreview(null);
+    }
+    
+    setIsEditMode(true);
+    setIsAddModalOpen(true);
+  };
+
   const handleDelete = (row: Journal) => {
-    if (window.confirm("Are you sure you want to delete this entry?")) {
-      console.log("Deleted", row);
+    setSelectedJournal(row);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedJournal) return;
+
+    try {
+        const token = localStorage.getItem("authToken") || "";
+        const response = await fetch(`${URLS.USERS}/delete/${selectedJournal._id}`, {
+            method: 'DELETE',
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            }
+        });
+
+        if (response.ok) {
+            alert("Journal deleted successfully");
+            fetchJournals();
+        } else {
+             alert("Failed to delete journal");
+        }
+    } catch (error) {
+        console.error("Error deleting journal:", error);
+        alert("Error deleting journal");
+    } finally {
+        setIsDeleteModalOpen(false);
+        setSelectedJournal(null);
     }
   };
 
@@ -205,7 +292,7 @@ const JournalsPage = () => {
               </div>
               <button
                 className="px-4 py-2 bg-[#00467F] text-white rounded-lg flex items-center gap-2 hover:bg-[#031E40] transition-colors"
-                onClick={() => setIsAddModalOpen(true)}
+                onClick={() => { resetForm(); setIsAddModalOpen(true); }}
               >
                 Add Journal
               </button>
@@ -357,8 +444,9 @@ const JournalsPage = () => {
 
       <Modal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        title="Add New Journal"
+        onClose={() => { setIsAddModalOpen(false); resetForm(); }}
+        title={isEditMode ? "Edit Journal" : "Add New Journal"}
+        maxWidth="max-w-4xl"
         footer={
           <>
             <button
@@ -418,7 +506,7 @@ const JournalsPage = () => {
               </div>
 
               <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Password *</label>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Password {isEditMode ? "(Leave blank to keep current)" : "*"}</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                     <Lock size={18} />
@@ -429,7 +517,7 @@ const JournalsPage = () => {
                     className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
                     value={formData.password}
                     onChange={handleInputChange}
-                    placeholder="Enter password"
+                    placeholder={isEditMode ? "Enter new password" : "Enter password"}
                   />
                 </div>
               </div>
@@ -605,6 +693,140 @@ const JournalsPage = () => {
               </div>
             </div>
           </div>
+        </div>
+      </Modal>
+
+      {/* View Modal */}
+      <Modal
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        title="Journal Details"
+        maxWidth="max-w-4xl"
+        footer={
+          <button
+            onClick={() => setIsViewModalOpen(false)}
+            className="px-5 py-2.5 text-sm font-medium text-white bg-[#00467F] rounded-xl hover:bg-[#031E40] transition-colors"
+          >
+            Close
+          </button>
+        }
+      >
+        {selectedJournal && (
+          <div className="space-y-6">
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="w-full md:w-1/3">
+                 {selectedJournal.journalImage ? (
+                    <img 
+                        src={`${ImageUrl}${selectedJournal.journalImage}`} 
+                        alt={selectedJournal.journalTitle} 
+                        className="w-full h-auto rounded-lg shadow-md object-cover"
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x400?text=No+Image';
+                        }}
+                    />
+                 ) : (
+                    <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
+                        <BookOpen size={48} />
+                    </div>
+                 )}
+              </div>
+              <div className="w-full md:w-2/3 space-y-4">
+                 <div>
+                    <h4 className="text-lg font-bold text-[#00467F]">{selectedJournal.journalTitle}</h4>
+                    <p className="text-sm text-gray-500">{selectedJournal.journalName}</p>
+                 </div>
+                 
+                 <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <span className="block text-xs font-semibold text-gray-500 uppercase">Journal ID</span>
+                        <span className="text-sm font-medium">{selectedJournal.journalId}</span>
+                    </div>
+                    <div>
+                        <span className="block text-xs font-semibold text-gray-500 uppercase">ISSN</span>
+                        <span className="text-sm font-medium">{selectedJournal.journalISSN}</span>
+                    </div>
+                    <div>
+                        <span className="block text-xs font-semibold text-gray-500 uppercase">Category</span>
+                        <span className="text-sm font-medium">{selectedJournal.journalCategory}</span>
+                    </div>
+                    <div>
+                        <span className="block text-xs font-semibold text-gray-500 uppercase">Created At</span>
+                        <span className="text-sm font-medium">{new Date(selectedJournal.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <div>
+                        <span className="block text-xs font-semibold text-gray-500 uppercase">Updated At</span>
+                        <span className="text-sm font-medium">{new Date((selectedJournal as any).updatedAt).toLocaleDateString()}</span>
+                    </div>
+                    <div>
+                        <span className="block text-xs font-semibold text-gray-500 uppercase">Status</span>
+                        <span className={`badge ${selectedJournal.status.toLowerCase() === 'active' ? 'badge-success' : 'badge-warning'}`}>
+                             {selectedJournal.status}
+                        </span>
+                    </div>
+                 </div>
+              </div>
+            </div>
+            
+            {(selectedJournal as any).journalDescription && (
+                <div className="border-t border-gray-100 pt-4">
+                    <h5 className="text-sm font-bold text-gray-900 uppercase mb-2">Description</h5>
+                    <div className="prose prose-sm max-w-none text-gray-600" dangerouslySetInnerHTML={{ __html: (selectedJournal as any).journalDescription }} />
+                </div>
+            )}
+             
+             {/* User Details attached to Journal (if available in row data) */}
+             <div className="border-t border-gray-100 pt-4">
+                <h5 className="text-sm font-bold text-gray-900 uppercase mb-3">Contact Information</h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <User size={16} className="text-[#00467F]" />
+                        <span>{(selectedJournal as any).userName}</span>
+                     </div>
+                     <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Mail size={16} className="text-[#00467F]" />
+                        <span>{(selectedJournal as any).email}</span>
+                     </div>
+                     <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Phone size={16} className="text-[#00467F]" />
+                        <span>{(selectedJournal as any).mobile}</span>
+                     </div>
+                </div>
+             </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Confirm Delete"
+        footer={
+             <>
+                <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="px-5 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                Cancel
+                </button>
+                <button
+                onClick={confirmDelete}
+                className="px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors"
+                >
+                Delete
+                </button>
+            </>
+        }
+      >
+        <div className="text-center py-4">
+            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                <Trash2 size={24} className="text-red-600" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Delete Journal?</h3>
+            <p className="text-gray-500">
+                Are you sure you want to delete <span className="font-semibold text-gray-900">{selectedJournal?.journalTitle}</span>? 
+                This action cannot be undone.
+            </p>
         </div>
       </Modal>
     </div>

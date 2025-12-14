@@ -7,9 +7,10 @@ interface ModalProps {
   title: string;
   children: ReactNode;
   footer?: ReactNode;
+  maxWidth?: string; // New prop for custom width
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, footer }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, footer, maxWidth = "max-w-lg" }) => {
   const [show, setShow] = useState(isOpen);
 
   useEffect(() => {
@@ -33,7 +34,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, footer 
       
       {/* Modal Content */}
       <div 
-        className={`relative w-full max-w-lg mx-4 bg-white rounded-2xl shadow-2xl transform transition-all duration-300 ${
+        className={`relative w-full ${maxWidth} mx-4 bg-white rounded-2xl shadow-2xl transform transition-all duration-300 ${
           isOpen ? "scale-100 translate-y-0" : "scale-95 translate-y-4"
         }`}
       >

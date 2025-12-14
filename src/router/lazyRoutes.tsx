@@ -22,4 +22,5 @@ export const EditorsChief = createLazyComponent(() => import('../feature-module/
 export const JournalsPage = createLazyComponent(() => import('../feature-module/pages/journals'))
 export const NotificationsPage = createLazyComponent(() => import('../feature-module/pages/notifications'))
 export const ManuscriptsPage = createLazyComponent(() => import('../feature-module/pages/manuscripts'))
+export const ContactEnquiries = createLazyComponent(() => import('../feature-module/pages/contactEnquiries'))
 export const SettingsPage = createLazyComponent(() => import('../feature-module/pages/settings'))

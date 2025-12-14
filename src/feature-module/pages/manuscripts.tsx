@@ -57,7 +57,7 @@ const ManuscriptsPage = () => {
       });
   }, []);
 
-    // New state for Modal and Form
+  // New state for Modal and Form
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -79,19 +79,19 @@ const ManuscriptsPage = () => {
   });
 
   const resetForm = () => {
-      setNewManuscript({
-        authorName: "",
-        email: "",
-        mobile: "",
-        postalAddress: "",
-        country: "",
-        journalId: undefined,
-        articleType: "",
-        menuscriptTitle: "",
-        abstract: "",
-      });
-      setSelectedManuscript(null);
-      setIsEditMode(false);
+    setNewManuscript({
+      authorName: "",
+      email: "",
+      mobile: "",
+      postalAddress: "",
+      country: "",
+      journalId: undefined,
+      articleType: "",
+      menuscriptTitle: "",
+      abstract: "",
+    });
+    setSelectedManuscript(null);
+    setIsEditMode(false);
   };
 
   // Fetch Journals for dropdown
@@ -138,31 +138,31 @@ const ManuscriptsPage = () => {
       },
       body: JSON.stringify(newManuscript)
     })
-    .then(res => res.json())
-    .then(result => {
+      .then(res => res.json())
+      .then(result => {
         alert(isEditMode ? "Manuscript updated successfully!" : "Manuscript added successfully!");
         setIsAddModalOpen(false);
         resetForm();
         // Refetch
         return fetch(URLS.MANUSCRIPTS, {
-             method: "GET",
-             headers: {
-               "content-type": "application/json",
-               "Authorization": `Bearer ${token}`,
-             },
+          method: "GET",
+          headers: {
+            "content-type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
         });
-    })
-    .then(res => res && res.json())
-    .then(result => {
-       if (result) {
-         if (Array.isArray(result)) setEditors(result);
-         else if (result.data && Array.isArray(result.data)) setEditors(result.data);
-       }
-    })
-    .catch(err => {
-      console.error("Error saving manuscript:", err);
-      alert("Failed to save manuscript");
-    });
+      })
+      .then(res => res && res.json())
+      .then(result => {
+        if (result) {
+          if (Array.isArray(result)) setEditors(result);
+          else if (result.data && Array.isArray(result.data)) setEditors(result.data);
+        }
+      })
+      .catch(err => {
+        console.error("Error saving manuscript:", err);
+        alert("Failed to save manuscript");
+      });
   };
 
   const handleView = (row: Manuscript) => {
@@ -171,28 +171,28 @@ const ManuscriptsPage = () => {
   };
 
   const handleEdit = (row: Manuscript) => {
-      let jId: any = "";
-      if (typeof row.journalId === 'object' && row.journalId !== null) {
-          jId = row.journalId._id;
-      } else {
-          jId = row.journalId;
-      }
+    let jId: any = "";
+    if (typeof row.journalId === 'object' && row.journalId !== null) {
+      jId = row.journalId._id;
+    } else {
+      jId = row.journalId;
+    }
 
-      setNewManuscript({
-        authorName: row.authorName || "",
-        email: row.email || "",
-        mobile: row.mobile || "",
-        postalAddress: row.postalAddress || "",
-        country: row.country || "",
-        journalId: jId,
-        articleType: row.articleType || "",
-        menuscriptTitle: row.menuscriptTitle || "",
-        abstract: row.abstract || "",
-        manuscriptFile: row.manuscriptFile // Keep existing file ref if needed
-      });
-      setSelectedManuscript(row);
-      setIsEditMode(true);
-      setIsAddModalOpen(true);
+    setNewManuscript({
+      authorName: row.authorName || "",
+      email: row.email || "",
+      mobile: row.mobile || "",
+      postalAddress: row.postalAddress || "",
+      country: row.country || "",
+      journalId: jId,
+      articleType: row.articleType || "",
+      menuscriptTitle: row.menuscriptTitle || "",
+      abstract: row.abstract || "",
+      manuscriptFile: row.manuscriptFile // Keep existing file ref if needed
+    });
+    setSelectedManuscript(row);
+    setIsEditMode(true);
+    setIsAddModalOpen(true);
   };
 
   const handleDelete = (row: Manuscript) => {
@@ -201,42 +201,42 @@ const ManuscriptsPage = () => {
   };
 
   const confirmDelete = async () => {
-      if (!selectedManuscript) return;
-      
-      try {
-          const token = localStorage.getItem("authToken") || "";
-          const response = await fetch(`${URLS.MANUSCRIPTS}/${selectedManuscript._id}`, {
-              method: 'DELETE',
-              headers: {
-                  "Authorization": `Bearer ${token}`,
-              }
-          });
+    if (!selectedManuscript) return;
 
-          if (response.ok) {
-              alert("Manuscript deleted successfully");
-               // Refetch
-               const res = await fetch(URLS.MANUSCRIPTS, {
-                 method: "GET",
-                 headers: {
-                   "content-type": "application/json",
-                   "Authorization": `Bearer ${token}`,
-                 },
-               });
-               const result = await res.json();
-               if (result) {
-                 if (Array.isArray(result)) setEditors(result);
-                 else if (result.data && Array.isArray(result.data)) setEditors(result.data);
-               }
-          } else {
-              alert("Failed to delete manuscript");
-          }
-      } catch (error) {
-          console.error("Error deleting manuscript:", error);
-          alert("Error deleting manuscript");
-      } finally {
-          setIsDeleteModalOpen(false);
-          setSelectedManuscript(null);
+    try {
+      const token = localStorage.getItem("authToken") || "";
+      const response = await fetch(`${URLS.MANUSCRIPTS}/${selectedManuscript._id}`, {
+        method: 'DELETE',
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        }
+      });
+
+      if (response.ok) {
+        alert("Manuscript deleted successfully");
+        // Refetch
+        const res = await fetch(URLS.MANUSCRIPTS, {
+          method: "GET",
+          headers: {
+            "content-type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+        const result = await res.json();
+        if (result) {
+          if (Array.isArray(result)) setEditors(result);
+          else if (result.data && Array.isArray(result.data)) setEditors(result.data);
+        }
+      } else {
+        alert("Failed to delete manuscript");
       }
+    } catch (error) {
+      console.error("Error deleting manuscript:", error);
+      alert("Error deleting manuscript");
+    } finally {
+      setIsDeleteModalOpen(false);
+      setSelectedManuscript(null);
+    }
   };
 
   // Search filter including nested journalName
@@ -274,15 +274,16 @@ const ManuscriptsPage = () => {
     <div className="page-wrapper">
       <div className="content container-fluid">
         <div className="page-header">
-          <div className="row align-items-center">
-      <button
-                className="px-4 py-2 bg-[#00467F] text-white rounded-lg flex items-center gap-2 hover:bg-[#031E40] transition-colors"
-                onClick={() => { resetForm(); setIsAddModalOpen(true); }}
-              >
-                 Add Manuscript
-              </button>
-            </div>
+          <div>
+            <h3 className="page-title">Manuscripts</h3>
+            <ul className="breadcrumb">
+              <li className="breadcrumb-item">
+                <a href="/index">Dashboard</a>
+              </li>
+              <li className="breadcrumb-item active">Manuscripts</li>
+            </ul>
           </div>
+        </div>
 
 
         {/* Editors Table */}
@@ -370,9 +371,9 @@ const ManuscriptsPage = () => {
                             <td>{row.country || "-"}</td>
 
                             <td>
-                                {typeof row.journalId === 'object' && row.journalId !== null 
-                                  ? (row.journalId as any).journalName 
-                                  : "-"}
+                              {typeof row.journalId === 'object' && row.journalId !== null
+                                ? (row.journalId as any).journalName
+                                : "-"}
                             </td>
 
                             <td>{row.menuscriptTitle || "-"}</td>
@@ -474,11 +475,14 @@ const ManuscriptsPage = () => {
         </div>
 
       </div>
-      
+
       <Modal
         isOpen={isAddModalOpen}
-        onClose={() => { setIsAddModalOpen(false); resetForm(); }}
-        title={isEditMode ? "Edit Manuscript" : "Add New Manuscript"}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          resetForm();
+        }}
+        title="Edit Manuscript"
         maxWidth="max-w-4xl"
         footer={
           <div className="flex items-center gap-3">
@@ -488,104 +492,154 @@ const ManuscriptsPage = () => {
             >
               Cancel
             </button>
+
             <button
               onClick={handleSaveManuscript}
               className="px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-[#00467F] to-[#0078A8] rounded-xl hover:shadow-lg hover:shadow-blue-900/20 hover:from-[#031E40] hover:to-[#00467F] transition-all duration-200 transform hover:-translate-y-0.5 focus:ring-2 focus:ring-[#00467F] outline-none"
             >
-              {isEditMode ? "Update Manuscript" : "Save Manuscript"}
+              Update Manuscript
             </button>
           </div>
         }
       >
         <div className="space-y-5">
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-             <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Title *</label>
-                <input
-                    type="text"
-                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
-                    value={newManuscript.menuscriptTitle}
-                    onChange={(e) => setNewManuscript({ ...newManuscript, menuscriptTitle: e.target.value })}
-                    placeholder="Manuscript Title"
-                />
-             </div>
-              <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Author Name</label>
-                <input
-                    type="text"
-                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
-                    value={newManuscript.authorName}
-                    onChange={(e) => setNewManuscript({ ...newManuscript, authorName: e.target.value })}
-                    placeholder="Author Name"
-                />
-             </div>
-           </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                Title *
+              </label>
+              <input
+                type="text"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F]"
+                value={newManuscript.menuscriptTitle}
+                onChange={(e) =>
+                  setNewManuscript({
+                    ...newManuscript,
+                    menuscriptTitle: e.target.value,
+                  })
+                }
+              />
+            </div>
 
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-             <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Email</label>
-                <input
-                    type="email"
-                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
-                    value={newManuscript.email}
-                    onChange={(e) => setNewManuscript({ ...newManuscript, email: e.target.value })}
-                    placeholder="Email"
-                />
-             </div>
-              <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Mobile</label>
-                <input
-                    type="text"
-                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
-                    value={newManuscript.mobile}
-                    onChange={(e) => setNewManuscript({ ...newManuscript, mobile: e.target.value })}
-                    placeholder="Mobile"
-                />
-             </div>
-           </div>
-           
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-             <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Country</label>
-                <input
-                    type="text"
-                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
-                    value={newManuscript.country}
-                    onChange={(e) => setNewManuscript({ ...newManuscript, country: e.target.value })}
-                    placeholder="Country"
-                />
-             </div>
-              <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Journal</label>
-                <select
-                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white appearance-none"
-                    value={typeof newManuscript.journalId === 'string' ? newManuscript.journalId : (newManuscript.journalId as any)?._id || ""}
-                    onChange={(e) => setNewManuscript({ ...newManuscript, journalId: e.target.value })}
-                >
-                    <option value="">Select Journal</option>
-                    {journals.map((journal) => (
-                    <option key={journal._id} value={journal._id}>
-                        {journal.journalTitle || journal.username || "Unknown Journal"}
-                    </option>
-                    ))}
-                </select>
-             </div>
-           </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                Author Name
+              </label>
+              <input
+                type="text"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F]"
+                value={newManuscript.authorName}
+                onChange={(e) =>
+                  setNewManuscript({
+                    ...newManuscript,
+                    authorName: e.target.value,
+                  })
+                }
+              />
+            </div>
+          </div>
 
-           <div className="relative">
-             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Abstract</label>
-             <textarea
-                className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
-                rows={4}
-                value={newManuscript.abstract}
-                onChange={(e) => setNewManuscript({ ...newManuscript, abstract: e.target.value })}
-                placeholder="Abstract..."
-             />
-           </div>
-           
-           {/* Add File Upload if needed in future */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                Email
+              </label>
+              <input
+                type="email"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F]"
+                value={newManuscript.email}
+                onChange={(e) =>
+                  setNewManuscript({
+                    ...newManuscript,
+                    email: e.target.value,
+                  })
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                Mobile
+              </label>
+              <input
+                type="text"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F]"
+                value={newManuscript.mobile}
+                onChange={(e) =>
+                  setNewManuscript({
+                    ...newManuscript,
+                    mobile: e.target.value,
+                  })
+                }
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                Country
+              </label>
+              <input
+                type="text"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F]"
+                value={newManuscript.country}
+                onChange={(e) =>
+                  setNewManuscript({
+                    ...newManuscript,
+                    country: e.target.value,
+                  })
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                Journal
+              </label>
+              <select
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F]"
+                value={
+                  typeof newManuscript.journalId === "string"
+                    ? newManuscript.journalId
+                    : newManuscript.journalId?._id || ""
+                }
+                onChange={(e) =>
+                  setNewManuscript({
+                    ...newManuscript,
+                    journalId: e.target.value,
+                  })
+                }
+              >
+                <option value="">Select Journal</option>
+                {journals.map((journal) => (
+                  <option key={journal._id} value={journal._id}>
+                    {journal.journalTitle || journal.username || "Unknown Journal"}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+              Abstract
+            </label>
+            <textarea
+              rows={4}
+              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F]"
+              value={newManuscript.abstract}
+              onChange={(e) =>
+                setNewManuscript({
+                  ...newManuscript,
+                  abstract: e.target.value,
+                })
+              }
+            />
+          </div>
         </div>
       </Modal>
+
 
       {/* View Modal */}
       <Modal
@@ -603,76 +657,76 @@ const ManuscriptsPage = () => {
         }
       >
         {selectedManuscript && (
-            <div className="space-y-6">
-                 <div className="border-b border-gray-100 pb-4">
-                    <h4 className="text-xl font-bold text-[#00467F]">{selectedManuscript.menuscriptTitle}</h4>
-                    <p className="text-sm text-gray-500 mt-1">Type: {selectedManuscript.articleType}</p>
-                 </div>
-
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Author</h5>
-                        <div className="flex items-center gap-2">
-                             <span className="text-sm font-medium">{selectedManuscript.authorName}</span>
-                        </div>
-                    </div>
-                     <div>
-                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Email</h5>
-                        <div className="flex items-center gap-2">
-                             <span className="text-sm font-medium">{selectedManuscript.email}</span>
-                        </div>
-                    </div>
-                     <div>
-                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Mobile</h5>
-                        <div className="flex items-center gap-2">
-                             <span className="text-sm font-medium">{selectedManuscript.mobile || "-"}</span>
-                        </div>
-                    </div>
-                     <div>
-                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Country</h5>
-                        <div className="flex items-center gap-2">
-                             <span className="text-sm font-medium">{selectedManuscript.country}</span>
-                        </div>
-                    </div>
-                     <div>
-                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Postal Address</h5>
-                        <div className="flex items-center gap-2">
-                             <span className="text-sm font-medium">{selectedManuscript.postalAddress || "-"}</span>
-                        </div>
-                    </div>
-                     <div>
-                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Journal</h5>
-                        <div className="flex items-center gap-2">
-                             <span className="text-sm font-medium">
-                                {typeof selectedManuscript.journalId === 'object' && selectedManuscript.journalId !== null
-                                    ? (selectedManuscript.journalId as any).journalName 
-                                    : "N/A"}
-                             </span>
-                        </div>
-                    </div>
-                 </div>
-
-                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                    <h5 className="text-xs font-semibold text-gray-500 uppercase mb-2">Abstract</h5>
-                    <p className="text-sm text-gray-700 leading-relaxed">
-                        {selectedManuscript.abstract || "No abstract available."}
-                    </p>
-                 </div>
-                 
-                 {selectedManuscript.manuscriptFile && (
-                    <div className="flex justify-end">
-                        <a
-                            href={`${Url}upload/${selectedManuscript.manuscriptFile}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
-                        >
-                            <FileText size={16} />
-                            View PDF
-                        </a>
-                    </div>
-                 )}
+          <div className="space-y-6">
+            <div className="border-b border-gray-100 pb-4">
+              <h4 className="text-xl font-bold text-[#00467F]">{selectedManuscript.menuscriptTitle}</h4>
+              <p className="text-sm text-gray-500 mt-1">Type: {selectedManuscript.articleType}</p>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Author</h5>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">{selectedManuscript.authorName}</span>
+                </div>
+              </div>
+              <div>
+                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Email</h5>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">{selectedManuscript.email}</span>
+                </div>
+              </div>
+              <div>
+                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Mobile</h5>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">{selectedManuscript.mobile || "-"}</span>
+                </div>
+              </div>
+              <div>
+                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Country</h5>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">{selectedManuscript.country}</span>
+                </div>
+              </div>
+              <div>
+                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Postal Address</h5>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">{selectedManuscript.postalAddress || "-"}</span>
+                </div>
+              </div>
+              <div>
+                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Journal</h5>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">
+                    {typeof selectedManuscript.journalId === 'object' && selectedManuscript.journalId !== null
+                      ? (selectedManuscript.journalId as any).journalName
+                      : "N/A"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+              <h5 className="text-xs font-semibold text-gray-500 uppercase mb-2">Abstract</h5>
+              <p className="text-sm text-gray-700 leading-relaxed">
+                {selectedManuscript.abstract || "No abstract available."}
+              </p>
+            </div>
+
+            {selectedManuscript.manuscriptFile && (
+              <div className="flex justify-end">
+                <a
+                  href={`${Url}upload/${selectedManuscript.manuscriptFile}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
+                >
+                  <FileText size={16} />
+                  View PDF
+                </a>
+              </div>
+            )}
+          </div>
         )}
       </Modal>
 
@@ -682,30 +736,30 @@ const ManuscriptsPage = () => {
         onClose={() => setIsDeleteModalOpen(false)}
         title="Confirm Delete"
         footer={
-             <>
-                <button
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="px-5 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-                >
-                Cancel
-                </button>
-                <button
-                onClick={confirmDelete}
-                className="px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors"
-                >
-                Delete
-                </button>
-             </>
+          <>
+            <button
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="px-5 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmDelete}
+              className="px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors"
+            >
+              Delete
+            </button>
+          </>
         }
       >
         <div className="py-2">
-           <p className="text-gray-600">Are you sure you want to delete this manuscript? This action cannot be undone.</p>
-           {selectedManuscript && (
-               <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-100">
-                   <p className="text-sm font-medium text-red-800">{selectedManuscript.menuscriptTitle}</p>
-                   <p className="text-xs text-red-600">{selectedManuscript.authorName}</p>
-               </div>
-           )}
+          <p className="text-gray-600">Are you sure you want to delete this manuscript? This action cannot be undone.</p>
+          {selectedManuscript && (
+            <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-100">
+              <p className="text-sm font-medium text-red-800">{selectedManuscript.menuscriptTitle}</p>
+              <p className="text-xs text-red-600">{selectedManuscript.authorName}</p>
+            </div>
+          )}
         </div>
       </Modal>
     </div>

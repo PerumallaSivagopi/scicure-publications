@@ -7,6 +7,7 @@ export const all_routes = {
   journals: '/journals',
   notifications: '/notifications',
   manuscripts: '/manuscripts',
+  contacts: '/contacts',
   settings: '/settings',
   authors: '/authors',
 }

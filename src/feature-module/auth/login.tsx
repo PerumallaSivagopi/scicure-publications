@@ -74,7 +74,7 @@ const Login = () => {
 
           <div className="left-image-wrap">
             <img
-              src={`${IMG_BASE}login.png`}
+              src={`${IMG_BASE}journals-bg.png`}
               alt="people"
               className="left-image"
             />

@@ -10,4 +10,5 @@ export const all_routes = {
   contacts: '/contacts',
   settings: '/settings',
   authors: '/authors',
+  journalDetails: '/journal-details',
 }

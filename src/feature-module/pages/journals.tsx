@@ -4,6 +4,8 @@ import { URLS, ImageUrl } from '../../Urls';
 import Modal from '../../components/ui/Modal';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { useNavigate } from 'react-router-dom';
+import { all_routes } from '../../router/all_routes';
 
 
 interface Journal {
@@ -15,6 +17,7 @@ interface Journal {
   createdAt: string;
   status: string;
   journalImage?: string;
+  journalBgImage?: string;
   journalName?: string;
   journalDescription?: string;
   userName?: string; // from User model
@@ -28,6 +31,7 @@ const JournalsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const navigate = useNavigate();
 
   // Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -35,7 +39,6 @@ const JournalsPage = () => {
 
   // Form State
   const [formData, setFormData] = useState({
-    userName: '',
     email: '',
     password: '',
     mobile: '',
@@ -48,6 +51,8 @@ const JournalsPage = () => {
 
   const [journalImage, setJournalImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [journalBgImage, setJournalBgImage] = useState<File | null>(null);
+  const [bgImagePreview, setBgImagePreview] = useState<string | null>(null);
 
   // View/Delete State
   const [selectedJournal, setSelectedJournal] = useState<Journal | null>(null);
@@ -106,9 +111,26 @@ const JournalsPage = () => {
     setImagePreview(null);
   };
 
+  const handleBgImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setJournalBgImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setBgImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeBgImage = () => {
+    setJournalBgImage(null);
+    setBgImagePreview(null);
+  };
+
   const handleSubmit = async () => {
     // Validation
-    if (!formData.userName || !formData.email || !formData.mobile ||
+    if (!formData.email || !formData.mobile ||
       !formData.journalName || !formData.journalTitle || !formData.journalISSN) {
       alert("Please fill in all required fields (Password is required only for new journals)");
       return;
@@ -125,7 +147,6 @@ const JournalsPage = () => {
       const token = localStorage.getItem("authToken") || "";
       const data = new FormData();
 
-      data.append('userName', formData.userName);
       data.append('email', formData.email);
       if (formData.password) data.append('password', formData.password); // Only append if provided
       data.append('mobile', formData.mobile);
@@ -140,6 +161,9 @@ const JournalsPage = () => {
 
       if (journalImage) {
         data.append('journalImage', journalImage);
+      }
+      if (journalBgImage) {
+        data.append('journalBgImage', journalBgImage);
       }
 
       let url = `${URLS.USERS}/create`;
@@ -178,7 +202,6 @@ const JournalsPage = () => {
 
   const resetForm = () => {
     setFormData({
-      userName: '',
       email: '',
       password: '',
       mobile: '',
@@ -190,19 +213,28 @@ const JournalsPage = () => {
     });
     setJournalImage(null);
     setImagePreview(null);
+    setJournalBgImage(null);
+    setBgImagePreview(null);
     setSelectedJournal(null);
     setIsEditMode(false);
   };
 
   const handleView = (row: Journal) => {
-    setSelectedJournal(row);
-    setIsViewModalOpen(true);
+    const id = row._id;
+    const jid = row.journalId;
+    if (id) {
+      navigate(`${all_routes.journalDetails}?id=${encodeURIComponent(id)}`);
+    } else if (jid) {
+      navigate(`${all_routes.journalDetails}?jid=${encodeURIComponent(jid)}`);
+    } else {
+      setSelectedJournal(row);
+      setIsViewModalOpen(true);
+    }
   };
 
   const handleEdit = (row: any) => { // Using any to access all fields from backend response easily without strict typing for now
     setSelectedJournal(row);
     setFormData({
-      userName: row.userName || '',
       email: row.email || '',
       password: '', // Password not shown
       mobile: row.mobile || '',
@@ -219,6 +251,11 @@ const JournalsPage = () => {
          setImagePreview(`${ImageUrl}${row.journalImage}`);
     } else {
         setImagePreview(null);
+    }
+    if (row.journalBgImage) {
+         setBgImagePreview(`${ImageUrl}${row.journalBgImage}`);
+    } else {
+         setBgImagePreview(null);
     }
     
     setIsEditMode(true);
@@ -472,23 +509,6 @@ const JournalsPage = () => {
             <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">User Details</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">User Name *</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                    <User size={18} />
-                  </div>
-                  <input
-                    type="text"
-                    name="userName"
-                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
-                    value={formData.userName}
-                    onChange={handleInputChange}
-                    placeholder="Enter user name"
-                  />
-                </div>
-              </div>
-
-              <div className="relative">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Email *</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -654,6 +674,46 @@ const JournalsPage = () => {
                     type="file"
                     className="sr-only"
                     onChange={handleImageChange}
+                    accept="image/*"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Background Image Upload */}
+            <div className="mb-5">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Journal Background Image</label>
+              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:bg-gray-50 transition-colors cursor-pointer relative"
+                onClick={() => document.getElementById('journal-bg-image-upload')?.click()}>
+                <div className="space-y-1 text-center">
+                  {bgImagePreview ? (
+                    <div className="relative inline-block">
+                      <img src={bgImagePreview} alt="Preview" className="h-32 object-contain rounded-md" />
+                      <button
+                        onClick={(e) => { e.stopPropagation(); removeBgImage(); }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                      <div className="flex text-sm text-gray-600 justify-center">
+                        <span className="relative cursor-pointer bg-white rounded-md font-medium text-[#00467F] hover:text-[#003366] focus-within:outline-none">
+                          Upload a file
+                        </span>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                    </>
+                  )}
+                  <input
+                    id="journal-bg-image-upload"
+                    name="journalBgImage"
+                    type="file"
+                    className="sr-only"
+                    onChange={handleBgImageChange}
                     accept="image/*"
                   />
                 </div>

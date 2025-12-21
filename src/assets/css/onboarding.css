@@ -377,7 +377,7 @@
   }
 
   .table-controls {
-    flex-direction: column;
+    /* flex-direction: column; */
     align-items: stretch;
   }
 
@@ -386,7 +386,7 @@
   }
 
   .pagination-info {
-    flex-direction: column;
+    /* flex-direction: column; */
     align-items: stretch;
   }
 

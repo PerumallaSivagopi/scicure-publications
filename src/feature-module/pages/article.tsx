@@ -50,9 +50,9 @@ const ArticlePage = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  
+
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-  
+
   // Form State
   const [newArticle, setNewArticle] = useState({
     articleTitle: "",
@@ -117,9 +117,9 @@ const ArticlePage = () => {
       .then((res) => res.json())
       .then((result) => {
         if (result.data && Array.isArray(result.data)) {
-            // Filter for journals
-            const journalData = result.data.filter((item: Journal) => item.role === 'journal');
-            setJournals(journalData);
+          // Filter for journals
+          const journalData = result.data.filter((item: Journal) => item.role === 'journal');
+          setJournals(journalData);
         }
       })
       .catch((err) => console.error("Error fetching journals:", err));
@@ -186,7 +186,7 @@ const ArticlePage = () => {
     // Reset files as we don't editing files directly this way usually, or implement preview
     setManuscriptFile(null);
     setCoverImage(null);
-    
+
     setSelectedArticle(row);
     setIsEditMode(true);
     setIsAddModalOpen(true);
@@ -204,30 +204,30 @@ const ArticlePage = () => {
 
   const confirmDelete = async () => {
     if (!selectedArticle) return;
-    
-    try {
-        const token = localStorage.getItem("authToken") || "";
-        const response = await fetch(`${URLS.ARTICLES}/${selectedArticle._id}`, {
-            method: 'DELETE',
-            headers: {
-                "Authorization": `Bearer ${token}`,
-            }
-        });
 
-        if (response.ok) {
-            alert("Article deleted successfully");
-            fetchArticles();
-        } else {
-            alert("Failed to delete article");
+    try {
+      const token = localStorage.getItem("authToken") || "";
+      const response = await fetch(`${URLS.ARTICLES}/${selectedArticle._id}`, {
+        method: 'DELETE',
+        headers: {
+          "Authorization": `Bearer ${token}`,
         }
+      });
+
+      if (response.ok) {
+        alert("Article deleted successfully");
+        fetchArticles();
+      } else {
+        alert("Failed to delete article");
+      }
     } catch (error) {
-        console.error("Error deleting article:", error);
-        alert("Error deleting article");
+      console.error("Error deleting article:", error);
+      alert("Error deleting article");
     } finally {
-        setIsDeleteModalOpen(false);
-        setSelectedArticle(null);
+      setIsDeleteModalOpen(false);
+      setSelectedArticle(null);
     }
-};
+  };
 
   const handleSave = async () => {
     // Validation
@@ -235,15 +235,15 @@ const ArticlePage = () => {
       alert("Please fill in required fields (Title, Journal, Author Name, Email)");
       return;
     }
-    
+
     if (!isEditMode && !manuscriptFile) {
-        alert("Manuscript file is required for new articles");
-        return;
+      alert("Manuscript file is required for new articles");
+      return;
     }
 
     const formData = new FormData();
     Object.entries(newArticle).forEach(([key, value]) => {
-        formData.append(key, value);
+      formData.append(key, value);
     });
 
     if (manuscriptFile) formData.append("manuscriptFile", manuscriptFile);
@@ -259,27 +259,27 @@ const ArticlePage = () => {
     }
 
     try {
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                // No Content-Type header when sending FormData; browser sets it with boundary
-            },
-            body: formData
-        });
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          // No Content-Type header when sending FormData; browser sets it with boundary
+        },
+        body: formData
+      });
 
-        if (response.ok) {
-            alert(isEditMode ? "Article updated successfully!" : "Article added successfully!");
-            setIsAddModalOpen(false);
-            resetForm();
-            fetchArticles();
-        } else {
-            const err = await response.json();
-            alert(`Failed to save article: ${err.message || "Unknown error"}`);
-        }
+      if (response.ok) {
+        alert(isEditMode ? "Article updated successfully!" : "Article added successfully!");
+        setIsAddModalOpen(false);
+        resetForm();
+        fetchArticles();
+      } else {
+        const err = await response.json();
+        alert(`Failed to save article: ${err.message || "Unknown error"}`);
+      }
     } catch (error) {
-        console.error("Error saving article:", error);
-        alert("Error saving article");
+      console.error("Error saving article:", error);
+      alert("Error saving article");
     }
   };
 
@@ -386,15 +386,14 @@ const ArticlePage = () => {
                 <div className="overflow-x-auto">
                   <table
                     className="table table-striped table-hover"
-                    style={{ whiteSpace: "nowrap" }}
                   >
                     <thead>
                       <tr>
                         <th>S.no</th>
                         <th>Article ID</th>
-                        <th>Journal Name</th>
-                        <th>Article Title</th>
-                        <th>Author Name</th>
+                        <th style={{ width: "180px" }}>Journal Name</th>
+<th style={{ width: "320px" }}>Article Title</th>
+<th style={{ width: "160px" }}>Author Name</th>
                         <th>Type</th>
                         <th>Status</th>
                         <th>PDF</th>
@@ -408,26 +407,45 @@ const ArticlePage = () => {
                           <tr key={row._id || index}>
                             <td>{(currentPage - 1) * pageSize + index + 1}</td>
                             <td>{row.articleId || "-"}</td>
-                            <td>
-                                {typeof row.journalId === 'object' 
-                                    ? (row.journalId as any)?.journalName 
-                                    : "-"}
+                            <td
+                              className="table-ellipsis-sm"
+                              title={
+                                typeof row.journalId === "object"
+                                  ? (row.journalId as any)?.journalName
+                                  : "-"
+                              }
+                            >
+                              {typeof row.journalId === "object"
+                                ? (row.journalId as any)?.journalName
+                                : "-"}
                             </td>
-                            <td>{row.articleTitle || "-"}</td>
-                            <td>{row.authorName || "-"}</td>
+
+                            <td
+                              className="table-ellipsis-lg"
+                              title={row.articleTitle || "-"}
+                            >
+                              {row.articleTitle || "-"}
+                            </td>
+
+                            <td
+                              className="table-ellipsis-sm"
+                              title={row.authorName || "-"}
+                            >
+                              {row.authorName || "-"}
+                            </td>
+
                             <td>{row.articleType || "-"}</td>
 
                             <td>
                               <span
-                                className={`badge ${
-                                  row.articleStatus === "Accepted"
+                                className={`badge ${row.articleStatus === "Accepted"
                                     ? "badge-success"
                                     : row.articleStatus === "Published"
-                                    ? "badge-info"
-                                    : row.articleStatus === "Rejected"
-                                    ? "badge-danger"
-                                    : "badge-warning"
-                                }`}
+                                      ? "badge-info"
+                                      : row.articleStatus === "Rejected"
+                                        ? "badge-danger"
+                                        : "badge-warning"
+                                  }`}
                               >
                                 {row.articleStatus || "-"}
                               </span>
@@ -518,9 +536,8 @@ const ArticlePage = () => {
                         <button
                           key={page}
                           onClick={() => setCurrentPage(page)}
-                          className={`paginate_button ${
-                            page === currentPage ? "current" : ""
-                          }`}
+                          className={`paginate_button ${page === currentPage ? "current" : ""
+                            }`}
                         >
                           {page}
                         </button>
@@ -544,8 +561,8 @@ const ArticlePage = () => {
         </div>
       </div>
 
-       {/* Add/Edit Modal */}
-       <Modal
+      {/* Add/Edit Modal */}
+      <Modal
         isOpen={isAddModalOpen}
         onClose={() => { setIsAddModalOpen(false); resetForm(); }}
         title={isEditMode ? "Edit Article" : "Add New Article"}
@@ -568,203 +585,203 @@ const ArticlePage = () => {
         }
       >
         <div className="space-y-5">
-           {/* Section 1: Basic Info */}
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-             <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Article Title *</label>
-                <input
-                    type="text"
-                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
-                    value={newArticle.articleTitle}
-                    onChange={(e) => setNewArticle({ ...newArticle, articleTitle: e.target.value })}
-                />
-             </div>
-             <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Journal *</label>
-                <select
-                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white appearance-none"
-                    value={newArticle.journalId}
-                    onChange={(e) => setNewArticle({ ...newArticle, journalId: e.target.value })}
-                >
-                    <option value="">Select Journal</option>
-                    {journals.map((journal) => (
-                    <option key={journal._id} value={journal._id}>
-                        {journal.journalName || journal.username || "Unknown Journal"}
-                    </option>
-                    ))}
-                </select>
-             </div>
-           </div>
-
-           {/* Section 2: Author Info */}
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-             <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Author Name *</label>
-                <input
-                    type="text"
-                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
-                    value={newArticle.authorName}
-                    onChange={(e) => setNewArticle({ ...newArticle, authorName: e.target.value })}
-                />
-             </div>
-              <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Author Email *</label>
-                <input
-                    type="email"
-                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
-                    value={newArticle.authorEmail}
-                    onChange={(e) => setNewArticle({ ...newArticle, authorEmail: e.target.value })}
-                />
-             </div>
-           </div>
-
-           {/* Section 3: Article Details */}
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-             <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Article Type</label>
-                <select
-                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white appearance-none"
-                    value={newArticle.articleType}
-                    onChange={(e) => setNewArticle({ ...newArticle, articleType: e.target.value })}
-                >
-                    <option value="">Select Type</option>
-                    <option value="Research">Research</option>
-                    <option value="Review">Review</option>
-                    <option value="Case Study">Case Study</option>
-                    <option value="Short Communication">Short Communication</option>
-                    <option value="Editorial">Editorial</option>
-                    <option value="Other">Other</option>
-                </select>
-             </div>
-              <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">DOI Number</label>
-                <input
-                    type="text"
-                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
-                    value={newArticle.doiNumber}
-                    onChange={(e) => setNewArticle({ ...newArticle, doiNumber: e.target.value })}
-                />
-             </div>
-           </div>
-           
-           <div className="relative">
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Keywords</label>
-            <input
+          {/* Section 1: Basic Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="relative">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Article Title *</label>
+              <input
                 type="text"
                 className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
-                value={newArticle.keywords}
-                onChange={(e) => setNewArticle({ ...newArticle, keywords: e.target.value })}
-                placeholder="Comma separated keywords"
-            />
-           </div>
+                value={newArticle.articleTitle}
+                onChange={(e) => setNewArticle({ ...newArticle, articleTitle: e.target.value })}
+              />
+            </div>
+            <div className="relative">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Journal *</label>
+              <select
+                className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white appearance-none"
+                value={newArticle.journalId}
+                onChange={(e) => setNewArticle({ ...newArticle, journalId: e.target.value })}
+              >
+                <option value="">Select Journal</option>
+                {journals.map((journal) => (
+                  <option key={journal._id} value={journal._id}>
+                    {journal.journalName || journal.username || "Unknown Journal"}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-           <div className="relative">
-             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Abstract</label>
-             <textarea
+          {/* Section 2: Author Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="relative">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Author Name *</label>
+              <input
+                type="text"
                 className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
-                rows={3}
-                value={newArticle.abstract}
-                onChange={(e) => setNewArticle({ ...newArticle, abstract: e.target.value })}
-             />
-           </div>
+                value={newArticle.authorName}
+                onChange={(e) => setNewArticle({ ...newArticle, authorName: e.target.value })}
+              />
+            </div>
+            <div className="relative">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Author Email *</label>
+              <input
+                type="email"
+                className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                value={newArticle.authorEmail}
+                onChange={(e) => setNewArticle({ ...newArticle, authorEmail: e.target.value })}
+              />
+            </div>
+          </div>
 
-           {/* Section 4: Dates & Issue */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-             <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Submission Date</label>
-                <input
-                    type="date"
-                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
-                    value={newArticle.submissionDate}
-                    onChange={(e) => setNewArticle({ ...newArticle, submissionDate: e.target.value })}
-                />
-             </div>
-             <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Acceptance Date</label>
-                <input
-                    type="date"
-                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
-                    value={newArticle.acceptanceDate}
-                    onChange={(e) => setNewArticle({ ...newArticle, acceptanceDate: e.target.value })}
-                />
-             </div>
-             <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Publication Date</label>
-                <input
-                    type="date"
-                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
-                    value={newArticle.publicationDate}
-                    onChange={(e) => setNewArticle({ ...newArticle, publicationDate: e.target.value })}
-                />
-             </div>
-           </div>
+          {/* Section 3: Article Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="relative">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Article Type</label>
+              <select
+                className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white appearance-none"
+                value={newArticle.articleType}
+                onChange={(e) => setNewArticle({ ...newArticle, articleType: e.target.value })}
+              >
+                <option value="">Select Type</option>
+                <option value="Research">Research</option>
+                <option value="Review">Review</option>
+                <option value="Case Study">Case Study</option>
+                <option value="Short Communication">Short Communication</option>
+                <option value="Editorial">Editorial</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div className="relative">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">DOI Number</label>
+              <input
+                type="text"
+                className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                value={newArticle.doiNumber}
+                onChange={(e) => setNewArticle({ ...newArticle, doiNumber: e.target.value })}
+              />
+            </div>
+          </div>
 
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-             <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Volume</label>
-                <input
-                    type="text"
-                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
-                    value={newArticle.volumeNumber}
-                    onChange={(e) => setNewArticle({ ...newArticle, volumeNumber: e.target.value })}
-                />
-             </div>
-             <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Issue</label>
-                <input
-                    type="text"
-                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
-                    value={newArticle.issueNumber}
-                    onChange={(e) => setNewArticle({ ...newArticle, issueNumber: e.target.value })}
-                />
-             </div>
-             <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Status</label>
-                <select
-                    className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white appearance-none"
-                    value={newArticle.articleStatus}
-                    onChange={(e) => setNewArticle({ ...newArticle, articleStatus: e.target.value })}
-                >
-                    <option value="Under Review">Under Review</option>
-                    <option value="Accepted">Accepted</option>
-                    <option value="Published">Published</option>
-                    <option value="Rejected">Rejected</option>
-                </select>
-             </div>
-           </div>
+          <div className="relative">
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Keywords</label>
+            <input
+              type="text"
+              className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+              value={newArticle.keywords}
+              onChange={(e) => setNewArticle({ ...newArticle, keywords: e.target.value })}
+              placeholder="Comma separated keywords"
+            />
+          </div>
 
-           {/* Section 5: File Uploads */}
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-             <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Manuscript File</label>
-                <div className="relative">
-                    <input
-                        type="file"
-                        className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                        onChange={(e) => setManuscriptFile(e.target.files ? e.target.files[0] : null)}
-                        ref={manuscriptInputRef}
-                    />
-                </div>
-                {isEditMode && selectedArticle?.manuscriptFile && !manuscriptFile && (
-                    <p className="text-xs text-gray-500 mt-1">Current file: {selectedArticle.manuscriptFile}</p>
-                )}
-             </div>
-             <div className="relative">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Cover Image (Optional)</label>
-                <div className="relative">
-                    <input
-                        type="file"
-                        className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                        accept="image/*"
-                         onChange={(e) => setCoverImage(e.target.files ? e.target.files[0] : null)}
-                        ref={coverImageInputRef}
-                    />
-                </div>
-                {isEditMode && selectedArticle?.coverImage && !coverImage && (
-                    <p className="text-xs text-gray-500 mt-1">Current image: {selectedArticle.coverImage}</p>
-                )}
-             </div>
-           </div>
+          <div className="relative">
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Abstract</label>
+            <textarea
+              className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+              rows={3}
+              value={newArticle.abstract}
+              onChange={(e) => setNewArticle({ ...newArticle, abstract: e.target.value })}
+            />
+          </div>
+
+          {/* Section 4: Dates & Issue */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="relative">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Submission Date</label>
+              <input
+                type="date"
+                className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                value={newArticle.submissionDate}
+                onChange={(e) => setNewArticle({ ...newArticle, submissionDate: e.target.value })}
+              />
+            </div>
+            <div className="relative">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Acceptance Date</label>
+              <input
+                type="date"
+                className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                value={newArticle.acceptanceDate}
+                onChange={(e) => setNewArticle({ ...newArticle, acceptanceDate: e.target.value })}
+              />
+            </div>
+            <div className="relative">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Publication Date</label>
+              <input
+                type="date"
+                className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                value={newArticle.publicationDate}
+                onChange={(e) => setNewArticle({ ...newArticle, publicationDate: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="relative">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Volume</label>
+              <input
+                type="text"
+                className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                value={newArticle.volumeNumber}
+                onChange={(e) => setNewArticle({ ...newArticle, volumeNumber: e.target.value })}
+              />
+            </div>
+            <div className="relative">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Issue</label>
+              <input
+                type="text"
+                className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                value={newArticle.issueNumber}
+                onChange={(e) => setNewArticle({ ...newArticle, issueNumber: e.target.value })}
+              />
+            </div>
+            <div className="relative">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Status</label>
+              <select
+                className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white appearance-none"
+                value={newArticle.articleStatus}
+                onChange={(e) => setNewArticle({ ...newArticle, articleStatus: e.target.value })}
+              >
+                <option value="Under Review">Under Review</option>
+                <option value="Accepted">Accepted</option>
+                <option value="Published">Published</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Section 5: File Uploads */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="relative">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Manuscript File</label>
+              <div className="relative">
+                <input
+                  type="file"
+                  className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  onChange={(e) => setManuscriptFile(e.target.files ? e.target.files[0] : null)}
+                  ref={manuscriptInputRef}
+                />
+              </div>
+              {isEditMode && selectedArticle?.manuscriptFile && !manuscriptFile && (
+                <p className="text-xs text-gray-500 mt-1">Current file: {selectedArticle.manuscriptFile}</p>
+              )}
+            </div>
+            <div className="relative">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Cover Image (Optional)</label>
+              <div className="relative">
+                <input
+                  type="file"
+                  className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  accept="image/*"
+                  onChange={(e) => setCoverImage(e.target.files ? e.target.files[0] : null)}
+                  ref={coverImageInputRef}
+                />
+              </div>
+              {isEditMode && selectedArticle?.coverImage && !coverImage && (
+                <p className="text-xs text-gray-500 mt-1">Current image: {selectedArticle.coverImage}</p>
+              )}
+            </div>
+          </div>
 
         </div>
       </Modal>
@@ -785,107 +802,106 @@ const ArticlePage = () => {
         }
       >
         {selectedArticle && (
-            <div className="space-y-6">
-                 <div className="border-b border-gray-100 pb-4 flex justify-between items-start">
-                    <div>
-                        <h4 className="text-xl font-bold text-[#00467F]">{selectedArticle.articleTitle}</h4>
-                        <p className="text-sm text-gray-500 mt-1">{selectedArticle.articleId} • {selectedArticle.articleType}</p>
-                    </div>
-                    <div>
-                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                  selectedArticle.articleStatus === "Accepted"
-                                    ? "bg-green-100 text-green-700"
-                                    : selectedArticle.articleStatus === "Published"
-                                    ? "bg-blue-100 text-blue-700"
-                                    : selectedArticle.articleStatus === "Rejected"
-                                    ? "bg-red-100 text-red-700"
-                                    : "bg-yellow-100 text-yellow-700"
-                                }`}>
-                            {selectedArticle.articleStatus}
-                        </span>
-                    </div>
-                 </div>
-
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Journal</h5>
-                        <p className="text-sm font-medium">
-                            {typeof selectedArticle.journalId === 'object' 
-                             ? (selectedArticle.journalId as any)?.journalName 
-                             : "N/A"}
-                        </p>
-                    </div>
-                     <div>
-                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Author</h5>
-                        <p className="text-sm font-medium">{selectedArticle.authorName}</p>
-                        <p className="text-xs text-gray-500">{selectedArticle.authorEmail}</p>
-                    </div>
-                     <div>
-                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">DOI</h5>
-                         <p className="text-sm font-medium">{selectedArticle.doiNumber || "-"}</p>
-                    </div>
-                     <div>
-                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Volume / Issue</h5>
-                         <p className="text-sm font-medium">{selectedArticle.volumeNumber || "-"} / {selectedArticle.issueNumber || "-"}</p>
-                    </div>
-                 </div>
-
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                    <div>
-                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Submitted</h5>
-                        <p className="text-sm font-medium">{selectedArticle.submissionDate ? new Date(selectedArticle.submissionDate).toLocaleDateString() : "-"}</p>
-                    </div>
-                    <div>
-                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Accepted</h5>
-                        <p className="text-sm font-medium">{selectedArticle.acceptanceDate ? new Date(selectedArticle.acceptanceDate).toLocaleDateString() : "-"}</p>
-                    </div>
-                    <div>
-                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Published</h5>
-                        <p className="text-sm font-medium">{selectedArticle.publicationDate ? new Date(selectedArticle.publicationDate).toLocaleDateString() : "-"}</p>
-                    </div>
-                 </div>
-
-                 <div>
-                    <h5 className="text-xs font-semibold text-gray-500 uppercase mb-2">Abstract</h5>
-                    <p className="text-sm text-gray-700 leading-relaxed p-4 bg-gray-50 rounded-xl border border-gray-100">
-                        {selectedArticle.abstract || "No abstract available."}
-                    </p>
-                 </div>
-                 
-                 <div>
-                    <h5 className="text-xs font-semibold text-gray-500 uppercase mb-2">Keywords</h5>
-                    <div className="flex flex-wrap gap-2">
-                        {selectedArticle.keywords ? selectedArticle.keywords.split(',').map((tag, i) => (
-                            <span key={i} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-lg">
-                                {tag.trim()}
-                            </span>
-                        )) : "-"}
-                    </div>
-                 </div>
-
-                  <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-                     {selectedArticle.manuscriptFile && (
-                        <a
-                            href={`${ImageUrl}${selectedArticle.manuscriptFile}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
-                        >
-                            View Manuscript
-                        </a>
-                     )}
-                     {selectedArticle.coverImage && (
-                        <a
-                            href={`${ImageUrl}${selectedArticle.coverImage}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
-                        >
-                            View Cover Image
-                        </a>
-                     )}
-                  </div>
+          <div className="space-y-6">
+            <div className="border-b border-gray-100 pb-4 flex justify-between items-start">
+              <div>
+                <h4 className="text-xl font-bold text-[#00467F]">{selectedArticle.articleTitle}</h4>
+                <p className="text-sm text-gray-500 mt-1">{selectedArticle.articleId} • {selectedArticle.articleType}</p>
+              </div>
+              <div>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${selectedArticle.articleStatus === "Accepted"
+                    ? "bg-green-100 text-green-700"
+                    : selectedArticle.articleStatus === "Published"
+                      ? "bg-blue-100 text-blue-700"
+                      : selectedArticle.articleStatus === "Rejected"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-yellow-100 text-yellow-700"
+                  }`}>
+                  {selectedArticle.articleStatus}
+                </span>
+              </div>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Journal</h5>
+                <p className="text-sm font-medium">
+                  {typeof selectedArticle.journalId === 'object'
+                    ? (selectedArticle.journalId as any)?.journalName
+                    : "N/A"}
+                </p>
+              </div>
+              <div>
+                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Author</h5>
+                <p className="text-sm font-medium">{selectedArticle.authorName}</p>
+                <p className="text-xs text-gray-500">{selectedArticle.authorEmail}</p>
+              </div>
+              <div>
+                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">DOI</h5>
+                <p className="text-sm font-medium">{selectedArticle.doiNumber || "-"}</p>
+              </div>
+              <div>
+                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Volume / Issue</h5>
+                <p className="text-sm font-medium">{selectedArticle.volumeNumber || "-"} / {selectedArticle.issueNumber || "-"}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
+              <div>
+                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Submitted</h5>
+                <p className="text-sm font-medium">{selectedArticle.submissionDate ? new Date(selectedArticle.submissionDate).toLocaleDateString() : "-"}</p>
+              </div>
+              <div>
+                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Accepted</h5>
+                <p className="text-sm font-medium">{selectedArticle.acceptanceDate ? new Date(selectedArticle.acceptanceDate).toLocaleDateString() : "-"}</p>
+              </div>
+              <div>
+                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Published</h5>
+                <p className="text-sm font-medium">{selectedArticle.publicationDate ? new Date(selectedArticle.publicationDate).toLocaleDateString() : "-"}</p>
+              </div>
+            </div>
+
+            <div>
+              <h5 className="text-xs font-semibold text-gray-500 uppercase mb-2">Abstract</h5>
+              <p className="text-sm text-gray-700 leading-relaxed p-4 bg-gray-50 rounded-xl border border-gray-100">
+                {selectedArticle.abstract || "No abstract available."}
+              </p>
+            </div>
+
+            <div>
+              <h5 className="text-xs font-semibold text-gray-500 uppercase mb-2">Keywords</h5>
+              <div className="flex flex-wrap gap-2">
+                {selectedArticle.keywords ? selectedArticle.keywords.split(',').map((tag, i) => (
+                  <span key={i} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-lg">
+                    {tag.trim()}
+                  </span>
+                )) : "-"}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+              {selectedArticle.manuscriptFile && (
+                <a
+                  href={`${ImageUrl}${selectedArticle.manuscriptFile}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+                >
+                  View Manuscript
+                </a>
+              )}
+              {selectedArticle.coverImage && (
+                <a
+                  href={`${ImageUrl}${selectedArticle.coverImage}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+                >
+                  View Cover Image
+                </a>
+              )}
+            </div>
+          </div>
         )}
       </Modal>
 
@@ -895,30 +911,30 @@ const ArticlePage = () => {
         onClose={() => setIsDeleteModalOpen(false)}
         title="Confirm Delete"
         footer={
-             <>
-                <button
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="px-5 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-                >
-                Cancel
-                </button>
-                <button
-                onClick={confirmDelete}
-                className="px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors"
-                >
-                Delete
-                </button>
-             </>
+          <>
+            <button
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="px-5 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmDelete}
+              className="px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors"
+            >
+              Delete
+            </button>
+          </>
         }
       >
         <div className="py-2">
-           <p className="text-gray-600">Are you sure you want to delete this article? This action cannot be undone.</p>
-           {selectedArticle && (
-               <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-100">
-                   <p className="text-sm font-medium text-red-800">{selectedArticle.articleTitle}</p>
-                   <p className="text-xs text-red-600">{selectedArticle.articleId}</p>
-               </div>
-           )}
+          <p className="text-gray-600">Are you sure you want to delete this article? This action cannot be undone.</p>
+          {selectedArticle && (
+            <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-100">
+              <p className="text-sm font-medium text-red-800">{selectedArticle.articleTitle}</p>
+              <p className="text-xs text-red-600">{selectedArticle.articleId}</p>
+            </div>
+          )}
         </div>
       </Modal>
     </div>

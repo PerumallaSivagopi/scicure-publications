@@ -106,3 +106,23 @@ body.dark {
   margin-top: 20px;
 }
 
+.table-ellipsis {
+  max-width: 220px;          /* adjust per column */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table-ellipsis-sm {
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table-ellipsis-lg {
+  max-width: 320px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

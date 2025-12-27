@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { all_routes } from "../../router/all_routes";
 import { loginAdmin } from "../../core/services/authService";
+import { Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -11,15 +12,17 @@ const Login = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      navigate(all_routes.index);
+    }
+  }, [navigate]);
+
   // Password eye toggle
-  const [passwordVisibility, setPasswordVisibility] = useState({
-    password: false,
-  });
-  const togglePasswordVisibility = (field) => {
-    setPasswordVisibility((prev) => ({
-      ...prev,
-      [field]: !prev[field],
-    }));
+  const [showPassword, setShowPassword] = useState(false);
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   const onSubmit = (e) => {
@@ -61,66 +64,65 @@ const Login = () => {
   const IMG_BASE = import.meta.env.VITE_IMAGE_BASE_URL;
 
   return (
-    
-    <div className="login-root">
-      {/* LEFT PANEL */}
-      <aside className="left-panel">
-        <div className="left-card">
-          <h1 className="left-title">
+    <div className="flex min-h-screen w-full bg-white font-sans">
+      {/* LEFT PANEL - Hidden on mobile/tablet, visible on large screens */}
+      <aside className="hidden lg:flex lg:w-[60%] bg-gradient-to-br from-[#0078A8] via-[#00467F] to-[#031E40] justify-center items-center p-10 relative text-white">
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-10 max-w-xl text-center border border-white/20 shadow-lg">
+          <h1 className="text-3xl font-bold mb-6 leading-tight drop-shadow-md">
             Advancing knowledge <br />
              through impactful 
               publications.
           </h1>
 
-          <div className="left-image-wrap">
+          <div className="my-5">
             <img
               src={`${IMG_BASE}journals-bg.png`}
               alt="people"
-              className="left-image"
+              className="w-[110%] object-contain mx-auto"
             />
           </div>
 
-          <p className="left-sub">
+          <p className="mt-2 text-lg font-medium opacity-95">
             Effortlessly manage your research, streamline submissions, and showcase your work globally.
           </p>
         </div>
       </aside>
 
-      {/* RIGHT PANEL */}
-      <main className="right-panel">
-        <div className="form-wrap">
-          <div className="">
-            <div className="login-brand">
-        <img src={`${IMG_BASE}image.png`} alt="brand" />
-        <h1>SCICURE PUBLICATIONS</h1>
-      </div>
+      {/* RIGHT PANEL - Full width on mobile */}
+      <main className="flex-1 flex justify-center items-center p-5 lg:p-10 bg-white">
+        <div className="w-full max-w-md text-center">
+          <div className="mb-8">
+            <div className="flex flex-col items-center">
+              <img src={`${IMG_BASE}image.png`} alt="brand" className="h-12 mb-2" />
+              <h1 className="text-xl font-bold text-[#031E40]">SCICURE PUBLICATIONS</h1>
+            </div>
           </div>
 
-          <h2 className="signin-title mt-5">Sign In</h2>
-          <p className="signin-sub">Please enter your details to sign in</p>
+          <h2 className="text-2xl font-bold text-[#031E40] mb-1">Sign In</h2>
+          <p className="text-gray-500 mb-6 text-sm">Please enter your details to sign in</p>
 
-          <form className="login-form" onSubmit={onSubmit}>
+          <form className="text-left" onSubmit={onSubmit}>
             {/* Email */}
-            <label className="form-label">Email ID</label>
-            <div className="input-with-icon">
+            <label className="block font-semibold mb-1.5 text-sm text-[#031E40]">Email ID</label>
+            <div className="relative mb-5">
               <input
                 type="email"
                 required
                 value={email}
-                className="login-input"
+                className="w-full px-3 py-3 rounded-lg border border-gray-300 focus:border-[#0078A8] focus:ring-2 focus:ring-[#0078A8]/15 outline-none transition-all text-sm"
                 placeholder="Enter your Email ID"
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
 
             {/* PASSWORD */}
-            <label className="form-label">Password</label>
-            <div className="input-with-icon">
+            <label className="block font-semibold mb-1.5 text-sm text-[#031E40]">Password</label>
+            <div className="relative mb-5">
               <input
-                type={passwordVisibility.password ? "text" : "password"}
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
-                className="login-input"
+                className="w-full px-3 py-3 rounded-lg border border-gray-300 focus:border-[#0078A8] focus:ring-2 focus:ring-[#0078A8]/15 outline-none transition-all text-sm"
                 placeholder="Enter your Password"
                 autoComplete="current-password"
                 onChange={(e) => setPassword(e.target.value)}
@@ -128,25 +130,30 @@ const Login = () => {
 
               <button
                 type="button"
-                className="eye-btn"
-                onClick={() => togglePasswordVisibility("password")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#00467F] hover:text-[#003366] transition-colors"
+                onClick={togglePasswordVisibility}
                 aria-label="toggle password visibility"
               >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
 
-            {error && <div className="error-text">{error}</div>}
+            {error && (
+              <div className="w-full p-2 mb-3 bg-red-50 text-red-600 text-center rounded-lg text-sm border border-red-100">
+                {error}
+              </div>
+            )}
 
             <button
               type="submit"
               disabled={loading}
-              className="primary-btn"
+              className="w-full py-3 bg-[#00467F] text-white rounded-lg font-semibold hover:bg-[#031E40] disabled:opacity-70 disabled:cursor-not-allowed transition-colors shadow-lg shadow-blue-900/20"
             >
               {loading ? "Signing In..." : "Sign In"}
             </button>
           </form>
 
-          <div className="copyright">
+          <div className="mt-8 text-xs text-gray-400">
             Copyright © 2025 - Richh MindX AI
           </div>
         </div>

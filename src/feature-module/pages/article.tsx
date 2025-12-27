@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import "../../assets/css/onboarding.css";
-import { Eye, Edit, Trash2, Check, X, Upload, Plus } from "lucide-react";
+import { Eye, Edit, Trash2, Check, X, Upload, Plus, User, Mail, FileText, Calendar, Tag, BookOpen, Layers, Hash } from "lucide-react";
 import { URLS, ImageUrl } from "../../Urls";
 import Modal from "../../components/ui/Modal";
 
@@ -12,6 +12,12 @@ interface Article {
     _id?: string;
     journalName?: string;
     journalId?: string;
+  };
+  issueId?: string | {
+    _id?: string;
+    volume?: string;
+    issue?: string;
+    year?: string;
   };
   authorName?: string;
   authorEmail?: string;
@@ -41,6 +47,7 @@ interface Journal {
 const ArticlePage = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [journals, setJournals] = useState<Journal[]>([]);
+  const [issues, setIssues] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
@@ -57,6 +64,7 @@ const ArticlePage = () => {
   const [newArticle, setNewArticle] = useState({
     articleTitle: "",
     journalId: "",
+    issueId: "",
     authorName: "",
     authorEmail: "",
     articleType: "",
@@ -66,8 +74,6 @@ const ArticlePage = () => {
     submissionDate: "",
     acceptanceDate: "",
     publicationDate: "",
-    volumeNumber: "",
-    issueNumber: "",
     publisherName: "SciCure Publications",
     articleStatus: "Under Review",
   });
@@ -125,16 +131,65 @@ const ArticlePage = () => {
       .catch((err) => console.error("Error fetching journals:", err));
   };
 
+  // Fetch Issues
+  const fetchIssues = (journalId: string) => {
+    if (!journalId) {
+      setIssues([]);
+      return;
+    }
+    const token = localStorage.getItem("authToken") || "";
+    fetch(`${URLS.ISSUES}/archive/${journalId}`, {
+      method: "GET",
+      headers: {
+        "content-type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && Array.isArray(data.archive)) {
+          // Flatten the archive structure
+          const flatIssues: any[] = [];
+          data.archive.forEach((yearGroup: any) => {
+            if (Array.isArray(yearGroup.issues)) {
+              yearGroup.issues.forEach((issue: any) => {
+                flatIssues.push({
+                  ...issue,
+                  label: `Vol ${issue.volume} Issue ${issue.issue} (${yearGroup.year})`
+                });
+              });
+            }
+          });
+          setIssues(flatIssues);
+        } else {
+          setIssues([]);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching issues:", err);
+        setIssues([]);
+      });
+  };
 
   useEffect(() => {
     fetchArticles();
     fetchJournals();
   }, []);
 
+  // Fetch issues when journal changes
+  useEffect(() => {
+    if (newArticle.journalId) {
+      fetchIssues(newArticle.journalId);
+    } else {
+      setIssues([]);
+    }
+  }, [newArticle.journalId]);
+
   const resetForm = () => {
     setNewArticle({
       articleTitle: "",
       journalId: "",
+      issueId: "",
       authorName: "",
       authorEmail: "",
       articleType: "",
@@ -144,8 +199,6 @@ const ArticlePage = () => {
       submissionDate: "",
       acceptanceDate: "",
       publicationDate: "",
-      volumeNumber: "",
-      issueNumber: "",
       publisherName: "SciCure Publications",
       articleStatus: "Under Review",
     });
@@ -165,9 +218,17 @@ const ArticlePage = () => {
       jId = row.journalId as string;
     }
 
+    let iId: string = "";
+    if (typeof row.issueId === 'object' && row.issueId !== null) {
+      iId = row.issueId._id || "";
+    } else {
+      iId = row.issueId as string;
+    }
+
     setNewArticle({
       articleTitle: row.articleTitle || "",
       journalId: jId,
+      issueId: iId,
       authorName: row.authorName || "",
       authorEmail: row.authorEmail || "",
       articleType: row.articleType || "",
@@ -177,8 +238,6 @@ const ArticlePage = () => {
       submissionDate: row.submissionDate ? new Date(row.submissionDate).toISOString().split('T')[0] : "",
       acceptanceDate: row.acceptanceDate ? new Date(row.acceptanceDate).toISOString().split('T')[0] : "",
       publicationDate: row.publicationDate ? new Date(row.publicationDate).toISOString().split('T')[0] : "",
-      volumeNumber: row.volumeNumber || "",
-      issueNumber: row.issueNumber || "",
       publisherName: row.publisherName || "SciCure Publications",
       articleStatus: row.articleStatus || "Under Review",
     });
@@ -243,6 +302,7 @@ const ArticlePage = () => {
 
     const formData = new FormData();
     Object.entries(newArticle).forEach(([key, value]) => {
+      if (key === "issueId" && !value) return;
       formData.append(key, value);
     });
 
@@ -467,25 +527,28 @@ const ArticlePage = () => {
                             </td>
 
                             <td>
-                              <div style={{ display: "flex", gap: 10 }}>
-                                <Eye
-                                  size={18}
-                                  color="#3e99a8"
+                              <div className="flex items-center gap-2">
+                                <button
                                   onClick={() => handleView(row)}
-                                  style={{ cursor: "pointer" }}
-                                />
-                                <Edit
-                                  size={18}
-                                  color="#e1b225"
+                                  className="p-1.5 text-[#3e99a8] hover:bg-[#3e99a8]/10 rounded-lg transition-colors"
+                                  title="View"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </button>
+                                <button
                                   onClick={() => handleEdit(row)}
-                                  style={{ cursor: "pointer" }}
-                                />
-                                <Trash2
-                                  size={18}
-                                  color="#bd3846"
+                                  className="p-1.5 text-[#e1b225] hover:bg-[#e1b225]/10 rounded-lg transition-colors"
+                                  title="Edit"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <button
                                   onClick={() => handleDelete(row)}
-                                  style={{ cursor: "pointer" }}
-                                />
+                                  className="p-1.5 text-[#bd3846] hover:bg-[#bd3846]/10 rounded-lg transition-colors"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
                               </div>
                             </td>
                           </tr>
@@ -505,51 +568,47 @@ const ArticlePage = () => {
                 </div>
 
                 {/* Pagination */}
-                <div
-                  style={{
-                    marginTop: 20,
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <span>
-                    Showing{" "}
-                    {paginatedData.length
-                      ? (currentPage - 1) * pageSize + 1
-                      : 0}{" "}
-                    to{" "}
-                    {Math.min(currentPage * pageSize, filteredData.length)} of{" "}
-                    {filteredData.length} entries
+                <div className="mt-4 flex justify-between items-center">
+                  <span className="text-sm text-gray-500">
+                    Showing {paginatedData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to{' '}
+                    {Math.min(currentPage * pageSize, filteredData.length)} of {filteredData.length} entries
                   </span>
 
-                  <div style={{ display: "flex", gap: 5 }}>
+                  <div className="flex gap-1">
+                    {/* Previous Button */}
                     <button
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                       disabled={currentPage === 1}
-                      className="paginate_button"
+                      className={`px-3 py-1.5 border border-gray-200 rounded-md text-sm font-medium transition-colors
+                        ${currentPage === 1 
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                          : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer'}`}
                     >
                       Previous
                     </button>
 
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                      (page) => (
-                        <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
-                          className={`paginate_button ${page === currentPage ? "current" : ""
-                            }`}
-                        >
-                          {page}
-                        </button>
-                      )
-                    )}
+                    {/* Page Numbers */}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-1.5 border rounded-md text-sm font-medium transition-colors
+                          ${page === currentPage
+                            ? 'bg-[#00467F] text-white border-[#00467F]'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:text-gray-900'}`}
+                      >
+                        {page}
+                      </button>
+                    ))}
 
+                    {/* Next Button */}
                     <button
-                      onClick={() =>
-                        setCurrentPage((p) => Math.min(totalPages, p + 1))
-                      }
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                       disabled={currentPage === totalPages}
-                      className="paginate_button"
+                      className={`px-3 py-1.5 border border-gray-200 rounded-md text-sm font-medium transition-colors
+                        ${currentPage === totalPages 
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                          : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer'}`}
                     >
                       Next
                     </button>
@@ -716,24 +775,22 @@ const ArticlePage = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="relative">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Volume</label>
-              <input
-                type="text"
-                className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
-                value={newArticle.volumeNumber}
-                onChange={(e) => setNewArticle({ ...newArticle, volumeNumber: e.target.value })}
-              />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="relative">
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Issue</label>
-              <input
-                type="text"
-                className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
-                value={newArticle.issueNumber}
-                onChange={(e) => setNewArticle({ ...newArticle, issueNumber: e.target.value })}
-              />
+              <select
+                className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white appearance-none"
+                value={typeof newArticle.issueId === 'object' ? (newArticle.issueId as any)?._id : newArticle.issueId}
+                onChange={(e) => setNewArticle({ ...newArticle, issueId: e.target.value })}
+                disabled={!newArticle.journalId}
+              >
+                <option value="">Select Issue</option>
+                {issues.map((issue) => (
+                  <option key={issue._id} value={issue._id}>
+                    {issue.label}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="relative">
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Status</label>
@@ -790,7 +847,7 @@ const ArticlePage = () => {
       <Modal
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
-        title="Article Details"
+        title={<div className="text-xl font-bold text-gray-800 flex items-center gap-2"><FileText size={24} /> Article Details</div>}
         maxWidth="max-w-4xl"
         footer={
           <button
@@ -803,79 +860,116 @@ const ArticlePage = () => {
       >
         {selectedArticle && (
           <div className="space-y-6">
-            <div className="border-b border-gray-100 pb-4 flex justify-between items-start">
+            <div className="border-b border-gray-100 pb-4 flex flex-col md:flex-row justify-between items-start gap-4">
               <div>
-                <h4 className="text-xl font-bold text-[#00467F]">{selectedArticle.articleTitle}</h4>
-                <p className="text-sm text-gray-500 mt-1">{selectedArticle.articleId} • {selectedArticle.articleType}</p>
+                <h4 className="text-xl font-bold text-[#00467F] flex items-center gap-2">
+                    <FileText className="w-6 h-6" />
+                    {selectedArticle.articleTitle}
+                </h4>
+                <div className="flex items-center gap-3 mt-2 text-sm text-gray-500">
+                    <span className="flex items-center gap-1"><Hash size={14} /> {selectedArticle.articleId}</span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1"><Layers size={14} /> {selectedArticle.articleType}</span>
+                </div>
               </div>
               <div>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${selectedArticle.articleStatus === "Accepted"
-                    ? "bg-green-100 text-green-700"
+                <span className={`px-3 py-1 rounded-full text-xs font-medium border ${selectedArticle.articleStatus === "Accepted"
+                    ? "bg-green-50 text-green-700 border-green-200"
                     : selectedArticle.articleStatus === "Published"
-                      ? "bg-blue-100 text-blue-700"
+                      ? "bg-blue-50 text-blue-700 border-blue-200"
                       : selectedArticle.articleStatus === "Rejected"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-yellow-100 text-yellow-700"
+                        ? "bg-red-50 text-red-700 border-red-200"
+                        : "bg-yellow-50 text-yellow-700 border-yellow-200"
                   }`}>
                   {selectedArticle.articleStatus}
                 </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Journal</h5>
-                <p className="text-sm font-medium">
-                  {typeof selectedArticle.journalId === 'object'
-                    ? (selectedArticle.journalId as any)?.journalName
-                    : "N/A"}
-                </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                <BookOpen size={18} className="text-blue-500 min-w-4" />
+                <div className="flex-grow">
+                  <p className="text-xs text-gray-500 uppercase font-semibold">Journal</p>
+                  <p className="font-medium text-gray-900">
+                    {typeof selectedArticle.journalId === 'object'
+                        ? (selectedArticle.journalId as any)?.journalName
+                        : "N/A"}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Author</h5>
-                <p className="text-sm font-medium">{selectedArticle.authorName}</p>
-                <p className="text-xs text-gray-500">{selectedArticle.authorEmail}</p>
+
+              <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                <User size={18} className="text-purple-500 min-w-4" />
+                <div className="flex-grow">
+                  <p className="text-xs text-gray-500 uppercase font-semibold">Author</p>
+                  <div className="flex flex-col">
+                      <span className="font-medium text-gray-900">{selectedArticle.authorName}</span>
+                      <span className="text-xs text-gray-500">{selectedArticle.authorEmail}</span>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">DOI</h5>
-                <p className="text-sm font-medium">{selectedArticle.doiNumber || "-"}</p>
+
+              <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                <Hash size={18} className="text-gray-500 min-w-4" />
+                <div className="flex-grow">
+                  <p className="text-xs text-gray-500 uppercase font-semibold">DOI</p>
+                  <p className="font-medium text-gray-900">{selectedArticle.doiNumber || "-"}</p>
+                </div>
               </div>
-              <div>
-                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Volume / Issue</h5>
-                <p className="text-sm font-medium">{selectedArticle.volumeNumber || "-"} / {selectedArticle.issueNumber || "-"}</p>
+
+              <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                <Layers size={18} className="text-orange-500 min-w-4" />
+                <div className="flex-grow">
+                  <p className="text-xs text-gray-500 uppercase font-semibold">Volume / Issue</p>
+                  <p className="font-medium text-gray-900">{selectedArticle.volumeNumber || "-"} / {selectedArticle.issueNumber || "-"}</p>
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
-              <div>
-                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Submitted</h5>
-                <p className="text-sm font-medium">{selectedArticle.submissionDate ? new Date(selectedArticle.submissionDate).toLocaleDateString() : "-"}</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3">
+                 <Calendar size={18} className="text-gray-500" />
+                 <div>
+                    <p className="text-xs text-gray-500 uppercase font-semibold">Submitted</p>
+                    <p className="font-medium text-gray-900">{selectedArticle.submissionDate ? new Date(selectedArticle.submissionDate).toLocaleDateString() : "-"}</p>
+                 </div>
               </div>
-              <div>
-                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Accepted</h5>
-                <p className="text-sm font-medium">{selectedArticle.acceptanceDate ? new Date(selectedArticle.acceptanceDate).toLocaleDateString() : "-"}</p>
+              <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3">
+                 <Calendar size={18} className="text-green-500" />
+                 <div>
+                    <p className="text-xs text-gray-500 uppercase font-semibold">Accepted</p>
+                    <p className="font-medium text-gray-900">{selectedArticle.acceptanceDate ? new Date(selectedArticle.acceptanceDate).toLocaleDateString() : "-"}</p>
+                 </div>
               </div>
-              <div>
-                <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Published</h5>
-                <p className="text-sm font-medium">{selectedArticle.publicationDate ? new Date(selectedArticle.publicationDate).toLocaleDateString() : "-"}</p>
+              <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3">
+                 <Calendar size={18} className="text-blue-500" />
+                 <div>
+                    <p className="text-xs text-gray-500 uppercase font-semibold">Published</p>
+                    <p className="font-medium text-gray-900">{selectedArticle.publicationDate ? new Date(selectedArticle.publicationDate).toLocaleDateString() : "-"}</p>
+                 </div>
               </div>
             </div>
 
-            <div>
-              <h5 className="text-xs font-semibold text-gray-500 uppercase mb-2">Abstract</h5>
-              <p className="text-sm text-gray-700 leading-relaxed p-4 bg-gray-50 rounded-xl border border-gray-100">
+            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+              <h5 className="text-xs font-semibold text-gray-500 uppercase mb-2 flex items-center gap-2">
+                <FileText size={16} /> Abstract
+              </h5>
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
                 {selectedArticle.abstract || "No abstract available."}
               </p>
             </div>
 
             <div>
-              <h5 className="text-xs font-semibold text-gray-500 uppercase mb-2">Keywords</h5>
+              <h5 className="text-xs font-semibold text-gray-500 uppercase mb-2 flex items-center gap-2">
+                <Tag size={16} /> Keywords
+              </h5>
               <div className="flex flex-wrap gap-2">
                 {selectedArticle.keywords ? selectedArticle.keywords.split(',').map((tag, i) => (
-                  <span key={i} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-lg">
+                  <span key={i} className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-lg border border-blue-100">
                     {tag.trim()}
                   </span>
-                )) : "-"}
+                )) : <span className="text-sm text-gray-500">-</span>}
               </div>
             </div>
 
@@ -887,6 +981,7 @@ const ArticlePage = () => {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
                 >
+                  <FileText size={16} />
                   View Manuscript
                 </a>
               )}
@@ -897,6 +992,7 @@ const ArticlePage = () => {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
                 >
+                  <FileText size={16} />
                   View Cover Image
                 </a>
               )}
@@ -927,14 +1023,15 @@ const ArticlePage = () => {
           </>
         }
       >
-        <div className="py-2">
-          <p className="text-gray-600">Are you sure you want to delete this article? This action cannot be undone.</p>
-          {selectedArticle && (
-            <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-100">
-              <p className="text-sm font-medium text-red-800">{selectedArticle.articleTitle}</p>
-              <p className="text-xs text-red-600">{selectedArticle.articleId}</p>
+        <div className="text-center py-4">
+            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                <Trash2 size={24} className="text-red-600" />
             </div>
-          )}
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Delete Article?</h3>
+            <p className="text-gray-500">
+                Are you sure you want to delete <span className="font-semibold text-gray-900">{selectedArticle?.articleTitle}</span>? 
+                This action cannot be undone.
+            </p>
         </div>
       </Modal>
     </div>

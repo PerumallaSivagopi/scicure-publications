@@ -9,7 +9,7 @@ export const publicRoutes = [
   {
     path: '/',
     name: 'Root',
-    element: <Navigate to={routes.login} />,
+    element: <Navigate to={routes.index} />,
     route: Route,
   },
   {

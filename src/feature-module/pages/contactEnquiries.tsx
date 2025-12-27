@@ -176,11 +176,11 @@ const ContactEnquiriesPage = () => {
         <div className="card">
           <div className="card-body">
             {/* Controls */}
-            <div className="table-controls flex justify-between mb-4">
-                <div>
-                <label style={{ marginRight: 10 }}>Show entries:</label>
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">Show entries:</span>
               <select
-                className="form-select form-select-sm"
+                className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F]"
                 value={pageSize}
                 onChange={(e) => {
                   setPageSize(+e.target.value);
@@ -192,9 +192,10 @@ const ContactEnquiriesPage = () => {
                 <option value={25}>25</option>
               </select>
                 </div>
+                <div className="relative">
               <input
                 type="text"
-                className="form-control form-control-sm w-64"
+                className="w-full md:w-64 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F]"
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => {
@@ -202,6 +203,7 @@ const ContactEnquiriesPage = () => {
                   setCurrentPage(1);
                 }}
               />
+                </div>
             </div>
 
             {/* Table */}
@@ -238,22 +240,28 @@ const ContactEnquiriesPage = () => {
                           </span>
                         </td>
                         <td>
-                          <div style={{ display: "flex", gap: 10 }}>
-                            <Eye
-                              size={25}
-                              className={viewButtonClass}
+                          <div className="flex items-center gap-2">
+                            <button
                               onClick={() => handleView(row)}
-                            />
-                            <Edit
-                              size={25}
-                              className={editButtonClass}
+                              className="p-1.5 text-[#3e99a8] hover:bg-[#3e99a8]/10 rounded-lg transition-colors"
+                              title="View"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
                               onClick={() => handleEdit(row)}
-                            />
-                            <Trash2
-                              size={25}
-                              className={deleteButtonClass}
+                              className="p-1.5 text-[#e1b225] hover:bg-[#e1b225]/10 rounded-lg transition-colors"
+                              title="Edit"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
                               onClick={() => handleDelete(row)}
-                            />
+                              className="p-1.5 text-[#bd3846] hover:bg-[#bd3846]/10 rounded-lg transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -270,53 +278,47 @@ const ContactEnquiriesPage = () => {
             </div>
 
              {/* Pagination */}
-                <div
-                  style={{
-                    marginTop: 20,
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <span>
-                    Showing{" "}
-                    {paginatedData.length
-                      ? (currentPage - 1) * pageSize + 1
-                      : 0}{" "}
-                    to{" "}
-                    {Math.min(currentPage * pageSize, filteredData.length)} of{" "}
-                    {filteredData.length} entries
+                <div className="mt-4 flex justify-between items-center">
+                  <span className="text-sm text-gray-500">
+                    Showing {paginatedData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to{' '}
+                    {Math.min(currentPage * pageSize, filteredData.length)} of {filteredData.length} entries
                   </span>
 
-                  <div style={{ display: "flex", gap: 5 }}>
+                  <div className="flex gap-1">
+                    {/* Previous Button */}
                     <button
-                      onClick={() =>
-                        setCurrentPage((p) => Math.max(1, p - 1))
-                      }
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                       disabled={currentPage === 1}
-                      className="paginate_button"
+                      className={`px-3 py-1.5 border border-gray-200 rounded-md text-sm font-medium transition-colors
+                        ${currentPage === 1 
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                          : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer'}`}
                     >
                       Previous
                     </button>
 
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                      (page) => (
-                        <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
-                          className={`paginate_button ${page === currentPage ? "current" : ""
-                            }`}
-                        >
-                          {page}
-                        </button>
-                      )
-                    )}
+                    {/* Page Numbers */}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-1.5 border rounded-md text-sm font-medium transition-colors
+                          ${page === currentPage
+                            ? 'bg-[#3e99a8] text-white border-[#3e99a8]'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:text-gray-900'}`}
+                      >
+                        {page}
+                      </button>
+                    ))}
 
+                    {/* Next Button */}
                     <button
-                      onClick={() =>
-                        setCurrentPage((p) => Math.min(totalPages, p + 1))
-                      }
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                       disabled={currentPage === totalPages}
-                      className="paginate_button"
+                      className={`px-3 py-1.5 border border-gray-200 rounded-md text-sm font-medium transition-colors
+                        ${currentPage === totalPages
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer'}`}
                     >
                       Next
                     </button>
@@ -417,30 +419,33 @@ const ContactEnquiriesPage = () => {
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        title={<div className="text-xl font-bold text-red-600 flex items-center gap-2"><Trash2 size={24} /> Confirm Deletion</div>}
+        title="Confirm Delete"
+        footer={
+          <>
+            <button
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="px-5 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={deleteContact}
+              className="px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors"
+            >
+              Delete
+            </button>
+          </>
+        }
       >
-        <div className="p-4 space-y-4 text-center">
-          <AlertTriangle size={48} className="text-red-500 mx-auto" />
-          <p className="text-lg text-gray-700">
-            Are you absolutely sure you want to permanently delete the enquiry from:
-          </p>
-          <p className="font-bold text-red-700 text-xl">{selectedContact?.fullName}</p>
-          <p className="text-sm text-gray-500">This action cannot be undone.</p>
-        </div>
-        
-        <div className="mt-6 flex justify-end gap-3">
-            <button 
-                onClick={() => setIsDeleteModalOpen(false)}
-                className={`${modalButtonBase} btn-secondary`}
-            >
-                Cancel
-            </button>
-            <button 
-                onClick={deleteContact}
-                className={`${modalButtonBase} btn-danger bg-red-600 hover:bg-red-700 text-white`}
-            >
-                <XCircle size={18} /> Delete Permanently
-            </button>
+        <div className="text-center py-4">
+            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                <Trash2 size={24} className="text-red-600" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Delete Enquiry?</h3>
+            <p className="text-gray-500">
+                Are you sure you want to delete the enquiry from <span className="font-semibold text-gray-900">{selectedContact?.fullName}</span>? 
+                This action cannot be undone.
+            </p>
         </div>
       </Modal>
     </div>

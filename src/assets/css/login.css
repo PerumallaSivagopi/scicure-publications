@@ -230,3 +230,19 @@
     padding-top: 20px;
   }
 }
+
+@media (max-width: 768px) {
+  .left-panel {
+    display: none;
+  }
+  
+  .login-root {
+    height: auto;
+    min-height: 100vh;
+  }
+  
+  .right-panel {
+    flex: 1;
+    padding: 40px 20px;
+  }
+}

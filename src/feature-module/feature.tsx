@@ -17,7 +17,17 @@ const Feature = () => {
     return () => clearTimeout(t)
   }, [location.pathname])
 
-  const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 992px)').matches
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.matchMedia('(max-width: 992px)').matches);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   return (
     <div className="main-wrapper">
@@ -26,11 +36,11 @@ const Feature = () => {
       {open && isMobile ? <div onClick={close} className="sidebar-overlay" /> : null}
       {routeLoading ? <div className="global-loader"><div className="loader"></div></div> : null}
       <div className="content-wrap">
-        <main className="with-sidebar" style={{ background: 'var(--page-bg)', minHeight: 'calc(100vh - 64px)', padding: 0 }}>
+        <main className="bg-gray-50 dark:bg-gray-900 min-h-[calc(100vh-64px)]">
           <Outlet />
         </main>
-        <footer style={{ padding: 12, borderTop: '1px solid var(--border)', background: 'var(--surface)' }}>
-          <small>2025 @copyright</small>
+        <footer className="p-3 border-t border-gray-200 bg-white dark:border-gray-700">
+          <small className="text-gray-500 dark:text-gray-400">2025 @copyright</small>
         </footer>
       </div>
     </div>

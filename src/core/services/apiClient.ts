@@ -35,6 +35,15 @@ class ApiClient {
       (res) => res,
       (err: any) => {
         const status = err?.response?.status
+        
+        if (status === 401) {
+          localStorage.removeItem('authToken');
+          // Optional: localStorage.removeItem('userRole');
+          if (!window.location.pathname.includes('/login')) {
+             window.location.href = '/login';
+          }
+        }
+
         const data = err?.response?.data
         const msg =
           typeof data === 'string'

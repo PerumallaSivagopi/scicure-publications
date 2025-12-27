@@ -11,4 +11,5 @@ export const URLS = {
   ARTICLES: `${Url}api/articles`,
   USERS: `${Url}api/users`,
   CONTACTS: `${Url}api/messages`,
+  ISSUES: `${Url}api/issues`,
 };

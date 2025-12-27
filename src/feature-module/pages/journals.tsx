@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import '../../assets/css/onboarding.css'; import { Eye, Edit, Trash2, User, Mail, Lock, Phone, Book, BookOpen, FileText, Tag, Upload, X } from "lucide-react";
+import '../../assets/css/onboarding.css'; import { Eye, Edit, Trash2, User, Mail, Lock, Phone, Book, BookOpen, FileText, Tag, Upload, X, Calendar, Hash, Layers } from "lucide-react";
 import { URLS, ImageUrl } from '../../Urls';
 import Modal from '../../components/ui/Modal';
 import ReactQuill from 'react-quill';
@@ -342,14 +342,16 @@ const JournalsPage = () => {
             <div className="card">
               <div className="card-body">
                 {/* Controls */}
-                <div className="table-controls" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-                  <div>
-                    <label htmlFor="pageSize" style={{ marginRight: '10px' }}>Show entries:</label>
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">Show entries:</span>
                     <select
-                      id="pageSize"
                       value={pageSize}
-                      onChange={(e) => { setPageSize(parseInt(e.target.value)); setCurrentPage(1); }}
-                      style={{ padding: '6px 8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                      className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F]"
                     >
                       <option value={5}>5</option>
                       <option value={10}>10</option>
@@ -357,13 +359,16 @@ const JournalsPage = () => {
                       <option value={50}>50</option>
                     </select>
                   </div>
-                  <div>
+                  <div className="relative">
                     <input
                       type="text"
                       placeholder="Search..."
                       value={searchTerm}
-                      onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                      style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: '4px', width: '200px' }}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="w-full md:w-64 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F]"
                     />
                   </div>
                 </div>
@@ -396,10 +401,28 @@ const JournalsPage = () => {
                             </span>
                           </td>
                           <td>
-                            <div style={{ display: "flex", gap: "10px" }}>
-                              <span title="View"><Eye size={18} color="#3e99a8ff" onClick={() => handleView(row)} /></span>
-                              <span title="Edit"><Edit size={18} color="#e1b225ff" onClick={() => handleEdit(row)} /></span>
-                              <span title="Delete"><Trash2 size={18} color="#bd3846ff" onClick={() => handleDelete(row)} /></span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleView(row)}
+                                className="p-1.5 text-[#3e99a8] hover:bg-[#3e99a8]/10 rounded-lg transition-colors"
+                                title="View"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleEdit(row)}
+                                className="p-1.5 text-[#e1b225] hover:bg-[#e1b225]/10 rounded-lg transition-colors"
+                                title="Edit"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(row)}
+                                className="p-1.5 text-[#bd3846] hover:bg-[#bd3846]/10 rounded-lg transition-colors"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -412,26 +435,21 @@ const JournalsPage = () => {
                   </tbody>
                 </table>
                 {/* Pagination */}
-                <div className="pagination-info" style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '14px', color: '#666' }}>
+                <div className="mt-4 flex justify-between items-center">
+                  <span className="text-sm text-gray-500">
                     Showing {paginatedData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to{' '}
                     {Math.min(currentPage * pageSize, filteredData.length)} of {filteredData.length} entries
                   </span>
 
-                  <div className="pagination" style={{ display: 'flex', gap: '5px' }}>
+                  <div className="flex gap-1">
                     {/* Previous Button */}
                     <button
                       onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                       disabled={currentPage === 1}
-                      className="paginate_button"
-                      style={{
-                        padding: '6px 12px',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        backgroundColor: currentPage === 1 ? '#e9ecef' : 'white',
-                        cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                        opacity: currentPage === 1 ? 0.5 : 1
-                      }}
+                      className={`px-3 py-1.5 border border-gray-200 rounded-md text-sm font-medium transition-colors
+                        ${currentPage === 1 
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                          : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer'}`}
                     >
                       Previous
                     </button>
@@ -441,15 +459,10 @@ const JournalsPage = () => {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`paginate_button ${page === currentPage ? 'current' : ''}`}
-                        style={{
-                          padding: '6px 12px',
-                          border: '1px solid #ddd',
-                          borderRadius: '4px',
-                          backgroundColor: page === currentPage ? '#3a98d9' : 'white',
-                          color: page === currentPage ? 'white' : '#333',
-                          cursor: 'pointer'
-                        }}
+                        className={`px-3 py-1.5 border rounded-md text-sm font-medium transition-colors
+                          ${page === currentPage
+                            ? 'bg-[#3e99a8] text-white border-[#3e99a8]'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:text-gray-900'}`}
                       >
                         {page}
                       </button>
@@ -459,15 +472,10 @@ const JournalsPage = () => {
                     <button
                       onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                       disabled={currentPage === totalPages}
-                      className="paginate_button"
-                      style={{
-                        padding: '6px 12px',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        backgroundColor: currentPage === totalPages ? '#e9ecef' : 'white',
-                        cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                        opacity: currentPage === totalPages ? 0.5 : 1
-                      }}
+                      className={`px-3 py-1.5 border border-gray-200 rounded-md text-sm font-medium transition-colors
+                        ${currentPage === totalPages
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer'}`}
                     >
                       Next
                     </button>
@@ -760,7 +768,7 @@ const JournalsPage = () => {
       <Modal
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
-        title="Journal Details"
+        title={<div className="text-xl font-bold text-gray-800 flex items-center gap-2"><BookOpen size={24} /> Journal Details</div>}
         maxWidth="max-w-4xl"
         footer={
           <button
@@ -773,82 +781,106 @@ const JournalsPage = () => {
       >
         {selectedJournal && (
           <div className="space-y-6">
-            <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex flex-col md:flex-row gap-6 border-b border-gray-100 pb-6">
               <div className="w-full md:w-1/3">
                  {selectedJournal.journalImage ? (
                     <img 
                         src={`${ImageUrl}${selectedJournal.journalImage}`} 
                         alt={selectedJournal.journalTitle} 
-                        className="w-full h-auto rounded-lg shadow-md object-cover"
+                        className="w-full h-auto rounded-xl shadow-md object-cover border border-gray-100"
                         onError={(e) => {
                             (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x400?text=No+Image';
                         }}
                     />
                  ) : (
-                    <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
+                    <div className="w-full h-48 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 border border-gray-200">
                         <BookOpen size={48} />
                     </div>
                  )}
               </div>
               <div className="w-full md:w-2/3 space-y-4">
                  <div>
-                    <h4 className="text-lg font-bold text-[#00467F]">{selectedJournal.journalTitle}</h4>
-                    <p className="text-sm text-gray-500">{selectedJournal.journalName}</p>
+                    <h4 className="text-2xl font-bold text-[#00467F] mb-1">{selectedJournal.journalTitle}</h4>
+                    <p className="text-gray-600 font-medium">{selectedJournal.journalName}</p>
                  </div>
                  
-                 <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <span className="block text-xs font-semibold text-gray-500 uppercase">Journal ID</span>
-                        <span className="text-sm font-medium">{selectedJournal.journalId}</span>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+                        <Hash size={18} className="text-blue-500" />
+                        <div>
+                            <p className="text-xs text-gray-500 uppercase font-semibold">Journal ID</p>
+                            <p className="text-sm font-medium text-gray-900">{selectedJournal.journalId}</p>
+                        </div>
                     </div>
-                    <div>
-                        <span className="block text-xs font-semibold text-gray-500 uppercase">ISSN</span>
-                        <span className="text-sm font-medium">{selectedJournal.journalISSN}</span>
+                    <div className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+                        <Hash size={18} className="text-purple-500" />
+                        <div>
+                            <p className="text-xs text-gray-500 uppercase font-semibold">ISSN</p>
+                            <p className="text-sm font-medium text-gray-900">{selectedJournal.journalISSN}</p>
+                        </div>
                     </div>
-                    <div>
-                        <span className="block text-xs font-semibold text-gray-500 uppercase">Category</span>
-                        <span className="text-sm font-medium">{selectedJournal.journalCategory}</span>
+                    <div className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+                        <Layers size={18} className="text-orange-500" />
+                        <div>
+                            <p className="text-xs text-gray-500 uppercase font-semibold">Category</p>
+                            <p className="text-sm font-medium text-gray-900">{selectedJournal.journalCategory}</p>
+                        </div>
                     </div>
-                    <div>
-                        <span className="block text-xs font-semibold text-gray-500 uppercase">Created At</span>
-                        <span className="text-sm font-medium">{new Date(selectedJournal.createdAt).toLocaleDateString()}</span>
+                    <div className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+                        <Calendar size={18} className="text-green-500" />
+                        <div>
+                            <p className="text-xs text-gray-500 uppercase font-semibold">Created</p>
+                            <p className="text-sm font-medium text-gray-900">{new Date(selectedJournal.createdAt).toLocaleDateString()}</p>
+                        </div>
                     </div>
-                    <div>
-                        <span className="block text-xs font-semibold text-gray-500 uppercase">Updated At</span>
-                        <span className="text-sm font-medium">{new Date((selectedJournal as any).updatedAt).toLocaleDateString()}</span>
-                    </div>
-                    <div>
-                        <span className="block text-xs font-semibold text-gray-500 uppercase">Status</span>
-                        <span className={`badge ${selectedJournal.status.toLowerCase() === 'active' ? 'badge-success' : 'badge-warning'}`}>
-                             {selectedJournal.status}
-                        </span>
+                    <div className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+                         <div className={`w-2 h-2 rounded-full ${selectedJournal.status.toLowerCase() === 'active' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                         <div>
+                            <p className="text-xs text-gray-500 uppercase font-semibold">Status</p>
+                            <p className={`text-sm font-medium ${selectedJournal.status.toLowerCase() === 'active' ? 'text-green-600' : 'text-yellow-600'}`}>
+                                {selectedJournal.status}
+                            </p>
+                         </div>
                     </div>
                  </div>
               </div>
             </div>
             
             {(selectedJournal as any).journalDescription && (
-                <div className="border-t border-gray-100 pt-4">
-                    <h5 className="text-sm font-bold text-gray-900 uppercase mb-2">Description</h5>
+                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                    <h5 className="text-sm font-bold text-gray-900 uppercase mb-3 flex items-center gap-2">
+                        <FileText size={16} /> Description
+                    </h5>
                     <div className="prose prose-sm max-w-none text-gray-600" dangerouslySetInnerHTML={{ __html: (selectedJournal as any).journalDescription }} />
                 </div>
             )}
              
-             {/* User Details attached to Journal (if available in row data) */}
-             <div className="border-t border-gray-100 pt-4">
-                <h5 className="text-sm font-bold text-gray-900 uppercase mb-3">Contact Information</h5>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <User size={16} className="text-[#00467F]" />
-                        <span>{(selectedJournal as any).userName}</span>
+             {/* Contact Information */}
+             <div>
+                <h5 className="text-sm font-bold text-gray-900 uppercase mb-3 flex items-center gap-2">
+                    <User size={16} /> Contact Information
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                     <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                        <User size={18} className="text-blue-500 min-w-4" />
+                        <div className="flex-grow">
+                            <p className="text-xs text-gray-500 uppercase font-semibold">Name</p>
+                            <p className="font-medium text-gray-900">{(selectedJournal as any).userName}</p>
+                        </div>
                      </div>
-                     <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Mail size={16} className="text-[#00467F]" />
-                        <span>{(selectedJournal as any).email}</span>
+                     <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                        <Mail size={18} className="text-red-500 min-w-4" />
+                        <div className="flex-grow">
+                            <p className="text-xs text-gray-500 uppercase font-semibold">Email</p>
+                            <p className="font-medium text-gray-900 break-all">{(selectedJournal as any).email}</p>
+                        </div>
                      </div>
-                     <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Phone size={16} className="text-[#00467F]" />
-                        <span>{(selectedJournal as any).mobile}</span>
+                     <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                        <Phone size={18} className="text-green-500 min-w-4" />
+                        <div className="flex-grow">
+                            <p className="text-xs text-gray-500 uppercase font-semibold">Mobile</p>
+                            <p className="font-medium text-gray-900">{(selectedJournal as any).mobile}</p>
+                        </div>
                      </div>
                 </div>
              </div>

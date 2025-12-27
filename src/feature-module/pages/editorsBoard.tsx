@@ -285,27 +285,16 @@ const EditorsBoard = () => {
               <div className="card-body">
 
                 {/* Search + Entries */}
-                <div
-                  className="table-controls"
-                  style={{
-                    marginBottom: 20,
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div>
-                    <label style={{ marginRight: 10 }}>Show entries:</label>
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">Show entries:</span>
                     <select
                       value={pageSize}
                       onChange={(e) => {
                         setPageSize(Number(e.target.value));
                         setCurrentPage(1);
                       }}
-                      style={{
-                        padding: "6px 8px",
-                        border: "1px solid #ddd",
-                        borderRadius: 4,
-                      }}
+                      className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F]"
                     >
                       <option value={5}>5</option>
                       <option value={10}>10</option>
@@ -314,21 +303,18 @@ const EditorsBoard = () => {
                     </select>
                   </div>
 
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    style={{
-                      padding: "8px 12px",
-                      border: "1px solid #ddd",
-                      borderRadius: 4,
-                      width: 200,
-                    }}
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="w-full md:w-64 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F]"
+                    />
+                  </div>
                 </div>
 
                 {/* TABLE */}
@@ -370,22 +356,28 @@ const EditorsBoard = () => {
                             <td>{row.country || "-"}</td>
 
                             <td>
-                              <div style={{ display: "flex", gap: 10 }}>
-                                <Eye
-                                  size={18}
-                                  color="#3e99a8"
+                              <div className="flex items-center gap-2">
+                                <button
                                   onClick={() => handleView(row)}
-                                />
-                                <Edit
-                                  size={18}
-                                  color="#e1b225"
+                                  className="p-1.5 text-[#3e99a8] hover:bg-[#3e99a8]/10 rounded-lg transition-colors"
+                                  title="View"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </button>
+                                <button
                                   onClick={() => handleEdit(row)}
-                                />
-                                <Trash2
-                                  size={18}
-                                  color="#bd3846"
+                                  className="p-1.5 text-[#e1b225] hover:bg-[#e1b225]/10 rounded-lg transition-colors"
+                                  title="Edit"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <button
                                   onClick={() => handleDelete(row)}
-                                />
+                                  className="p-1.5 text-[#bd3846] hover:bg-[#bd3846]/10 rounded-lg transition-colors"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
                               </div>
                             </td>
                           </tr>
@@ -405,54 +397,47 @@ const EditorsBoard = () => {
                 </div>
 
                 {/* Pagination */}
-                <div
-                  style={{
-                    marginTop: 20,
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <span>
-                    Showing{" "}
-                    {paginatedData.length
-                      ? (currentPage - 1) * pageSize + 1
-                      : 0}{" "}
-                    to{" "}
-                    {Math.min(currentPage * pageSize, filteredData.length)} of{" "}
-                    {filteredData.length} entries
+                <div className="mt-4 flex justify-between items-center">
+                  <span className="text-sm text-gray-500">
+                    Showing {paginatedData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to{' '}
+                    {Math.min(currentPage * pageSize, filteredData.length)} of {filteredData.length} entries
                   </span>
 
-                  <div style={{ display: "flex", gap: 5 }}>
+                  <div className="flex gap-1">
+                    {/* Previous Button */}
                     <button
-                      onClick={() =>
-                        setCurrentPage((p) => Math.max(1, p - 1))
-                      }
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                       disabled={currentPage === 1}
-                      className="paginate_button"
+                      className={`px-3 py-1.5 border border-gray-200 rounded-md text-sm font-medium transition-colors
+                        ${currentPage === 1 
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                          : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer'}`}
                     >
                       Previous
                     </button>
 
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                      (page) => (
-                        <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
-                          className={`paginate_button ${
-                            page === currentPage ? "current" : ""
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      )
-                    )}
+                    {/* Page Numbers */}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-1.5 border rounded-md text-sm font-medium transition-colors
+                          ${page === currentPage
+                            ? 'bg-[#3e99a8] text-white border-[#3e99a8]'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:text-gray-900'}`}
+                      >
+                        {page}
+                      </button>
+                    ))}
 
+                    {/* Next Button */}
                     <button
-                      onClick={() =>
-                        setCurrentPage((p) => Math.min(totalPages, p + 1))
-                      }
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                       disabled={currentPage === totalPages}
-                      className="paginate_button"
+                      className={`px-3 py-1.5 border border-gray-200 rounded-md text-sm font-medium transition-colors
+                        ${currentPage === totalPages
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer'}`}
                     >
                       Next
                     </button>
@@ -601,7 +586,7 @@ const EditorsBoard = () => {
       <Modal
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
-        title="Editor Details"
+        title={<div className="text-xl font-bold text-gray-800 flex items-center gap-2"><User size={24} /> Editor Details</div>}
         maxWidth="max-w-3xl"
         footer={
           <button
@@ -615,7 +600,7 @@ const EditorsBoard = () => {
         {selectedEditor && (
             <div className="space-y-6">
                  <div className="flex items-center gap-4 border-b border-gray-100 pb-4">
-                    <div className="bg-gray-100 p-3 rounded-full">
+                    <div className="bg-blue-50 p-3 rounded-full">
                         <User size={32} className="text-[#00467F]" />
                     </div>
                     <div>
@@ -624,37 +609,40 @@ const EditorsBoard = () => {
                     </div>
                  </div>
 
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Email</h5>
-                        <div className="flex items-center gap-2">
-                             <Mail size={16} className="text-gray-400" />
-                             <span className="text-sm font-medium">{selectedEditor.email}</span>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                        <Mail size={18} className="text-red-500 min-w-4" />
+                        <div className="flex-grow">
+                            <p className="text-xs text-gray-500 uppercase font-semibold">Email</p>
+                            <p className="font-medium text-gray-900 break-all">{selectedEditor.email}</p>
                         </div>
                     </div>
-                    <div>
-                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Country</h5>
-                        <div className="flex items-center gap-2">
-                             <Globe size={16} className="text-gray-400" />
-                             <span className="text-sm font-medium">{selectedEditor.country}</span>
+
+                    <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                        <Globe size={18} className="text-purple-500 min-w-4" />
+                        <div className="flex-grow">
+                            <p className="text-xs text-gray-500 uppercase font-semibold">Country</p>
+                            <p className="font-medium text-gray-900">{selectedEditor.country}</p>
                         </div>
                     </div>
-                    <div>
-                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Institution</h5>
-                        <div className="flex items-center gap-2">
-                             <Building2 size={16} className="text-gray-400" />
-                             <span className="text-sm font-medium">{selectedEditor.institution}</span>
+
+                    <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                        <Building2 size={18} className="text-green-500 min-w-4" />
+                        <div className="flex-grow">
+                            <p className="text-xs text-gray-500 uppercase font-semibold">Institution</p>
+                            <p className="font-medium text-gray-900">{selectedEditor.institution}</p>
                         </div>
                     </div>
-                     <div>
-                        <h5 className="text-xs font-semibold text-gray-500 uppercase mb-1">Journal</h5>
-                        <div className="flex items-center gap-2">
-                             <BookOpen size={16} className="text-gray-400" />
-                             <span className="text-sm font-medium">
+
+                     <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                        <BookOpen size={18} className="text-[#00467F] min-w-4" />
+                        <div className="flex-grow">
+                            <p className="text-xs text-gray-500 uppercase font-semibold">Journal</p>
+                            <p className="font-medium text-gray-900">
                                 {typeof selectedEditor.journalId === 'object' && selectedEditor.journalId !== null
                                     ? (selectedEditor.journalId as any).journalTitle || (selectedEditor.journalId as any).journalName 
                                     : "N/A"}
-                             </span>
+                            </p>
                         </div>
                     </div>
                  </div>
@@ -684,14 +672,15 @@ const EditorsBoard = () => {
              </>
         }
       >
-        <div className="py-2">
-           <p className="text-gray-600">Are you sure you want to delete this editor? This action cannot be undone.</p>
-           {selectedEditor && (
-               <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-100">
-                   <p className="text-sm font-medium text-red-800">{selectedEditor.editorName}</p>
-                   <p className="text-xs text-red-600">{selectedEditor.email}</p>
-               </div>
-           )}
+        <div className="text-center py-4">
+            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                <Trash2 size={24} className="text-red-600" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Delete Editor?</h3>
+            <p className="text-gray-500">
+                Are you sure you want to delete <span className="font-semibold text-gray-900">{selectedEditor?.editorName}</span>? 
+                This action cannot be undone.
+            </p>
         </div>
       </Modal>
     </div>

@@ -36,7 +36,7 @@ const Feature = () => {
       {open && isMobile ? <div onClick={close} className="sidebar-overlay" /> : null}
       {routeLoading ? <div className="global-loader"><div className="loader"></div></div> : null}
       <div className="content-wrap">
-        <main className="bg-gray-50 dark:bg-gray-900 min-h-[calc(100vh-64px)]">
+        <main className="bg-gray-50 min-h-[calc(100vh-64px)]">
           <Outlet />
         </main>
         <footer className="p-3 border-t border-gray-200 bg-white dark:border-gray-700">

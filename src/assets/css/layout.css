@@ -21,15 +21,7 @@
   --page-bg: #fafafa;
 }
 
-html[data-theme="dark"] {
-  --header-bg: #1f2937;
-  --border: rgba(255,255,255,0.12);
-  --text-dark: #e5e7eb;
-  --text-light: #94a3b8;
-  --nav-text: #e5e7eb;
-  --surface: #111827;
-  --page-bg: #0f172a;
-}
+/* Dark theme removed */
 
 /* Header */
 .app-header {
@@ -217,7 +209,7 @@ html[data-theme="dark"] {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 24px;
+  padding: 12px 15px;
   color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
   font-size: 14px;
@@ -237,6 +229,8 @@ html[data-theme="dark"] {
   background: var(--sidebar-hover-bg);
   border-left: 4px solid var(--theme-cyan); /* Cyan accent line on active */
   color: #fff;
+  width: 90%;
+  border-radius: 0 10px 10px 0;
 }
 
 .nav-icon:hover i,
@@ -293,7 +287,7 @@ html[data-theme="dark"] {
 
 .content-wrap {
   margin-left: 220px;
-  padding: 16px;
+  /* padding: 16px; */
 }
 
 .sidebar-overlay {

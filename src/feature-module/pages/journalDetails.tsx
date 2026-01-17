@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { URLS, ImageUrl } from "../../Urls";
 import Modal from "../../components/ui/Modal";
+import DoiIcon from "../../assets/images/doi-image.png";
 import {
   Mail,
   University,
@@ -22,9 +23,8 @@ import {
 const tabs = [
   "Journal Home",
   "Editorial Board",
-  "Abstracting and Indexing",
   "Volumes/Issues",
-  "Articles Inpress",
+  "Articles",
   "Current Issue",
   // "Archive Page",
 ];
@@ -54,6 +54,11 @@ const [formData, setFormData] = useState({
   const [articles, setArticles] = useState<any[]>([]);
   const [articlesLoading, setArticlesLoading] = useState(false);
   
+  // Current Issue State
+  const [currentIssueData, setCurrentIssueData] = useState<any>(null);
+  const [currentIssueLoading, setCurrentIssueLoading] = useState(false);
+  const [currentIssueError, setCurrentIssueError] = useState("");
+
   // Delete Modal State
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [issueToDelete, setIssueToDelete] = useState<any>(null);
@@ -73,7 +78,7 @@ const [formData, setFormData] = useState({
     setArchiveLoading(true);
     setArchiveError("");
 
-    fetch(`${URLS.ISSUES}/archive/${journal._id}`, {
+    fetch(`${URLS.ISSUES}/archives/${journal._id}`, {
       method: "GET",
       headers: {
         "content-type": "application/json",
@@ -113,11 +118,57 @@ const [formData, setFormData] = useState({
       .finally(() => setArticlesLoading(false));
   };
 
+  const fetchAllJournalArticles = () => {
+    if (!journal?._id) return;
+    setArticlesLoading(true);
+    fetch(`${URLS.ARTICLES}/journal/${journal._id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success) {
+          setArticles(data.articles || []);
+        } else {
+          setArticles([]);
+        }
+      })
+      .catch(() => {
+        setArticles([]);
+      })
+      .finally(() => setArticlesLoading(false));
+  };
+
   useEffect(() => {
     if (activeTab === "Volumes/Issues" && journal?._id && !viewIssue) {
       fetchArchive();
     }
+    if (activeTab === "Current Issue" && journal?._id) {
+        fetchCurrentIssue();
+    }
+    if (activeTab === "Articles" && journal?._id) {
+        fetchAllJournalArticles();
+    }
   }, [activeTab, journal, viewIssue]);
+
+  const fetchCurrentIssue = () => {
+    if (!journal?._id) return;
+    setCurrentIssueLoading(true);
+    setCurrentIssueError("");
+
+    fetch(`${URLS.ISSUES}/latest/${journal._id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success) {
+          setCurrentIssueData(data);
+        } else {
+          setCurrentIssueData(null);
+          setCurrentIssueError(data.message || "No current issue found");
+        }
+      })
+      .catch(() => {
+        setCurrentIssueData(null);
+        setCurrentIssueError("Failed to load current issue");
+      })
+      .finally(() => setCurrentIssueLoading(false));
+  };
 
   useEffect(() => {
     const id = searchParams.get("id");
@@ -810,10 +861,215 @@ const [formData, setFormData] = useState({
         )}
 
 
+        {activeTab === "Current Issue" && (
+          <div className="space-y-8">
+            {currentIssueLoading && (
+              <div className="flex justify-center p-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00467F]"></div>
+              </div>
+            )}
+
+            {currentIssueError && (
+               <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                  <AlertTriangle className="w-10 h-10 text-red-400 mx-auto mb-3" />
+                  <p className="text-gray-500">{currentIssueError}</p>
+               </div>
+            )}
+
+            {!currentIssueLoading && !currentIssueError && currentIssueData && (
+              <div>
+                <h2 className="text-2xl font-bold text-[#031E40] mb-2">Current Issue</h2>
+                <p className="text-gray-600 mb-8">
+                  The latest issue of {journal?.journalTitle} features cutting-edge research and insights from leading experts in the field.
+                </p>
+
+                <h3 className="text-xl font-bold text-gray-800 mb-6">
+                  Volume {currentIssueData.latestIssue?.volume}, Issue {currentIssueData.latestIssue?.issue}
+                </h3>
+
+                <div className="space-y-6">
+                  {currentIssueData.articles?.map((article: any) => (
+                    <div
+                      key={article._id}
+                      className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      {/* Header: Badge + DOI */}
+                      <div className="flex justify-between items-start mb-4">
+                        <span className="bg-[#031E40] text-white text-xs font-semibold px-3 py-1 rounded-full uppercase">
+                          {article.articleType}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <img src={DoiIcon} alt="DOI" className="w-6 h-6 object-contain" />
+                          <span className="text-gray-600 text-sm font-medium">
+                            : {article.doiNumber || "N/A"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Title */}
+                      <h4 className="text-lg font-bold text-[#031E40] mb-2 leading-tight">
+                        {article.articleTitle}
+                      </h4>
+
+                      {/* Authors */}
+                      <p className="text-sm text-gray-600 mb-4">
+                        <span className="font-bold text-gray-800">Authors : </span>
+                        {article.authorName}
+                      </p>
+
+                      {/* Footer: Dates + Buttons */}
+                      <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4 border-t border-gray-100">
+                        <div className="flex flex-wrap gap-4 text-xs text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <Calendar size={14} /> Rec. Date:{" "}
+                            {article.submissionDate
+                              ? new Date(article.submissionDate).toLocaleDateString()
+                              : "-"}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Calendar size={14} /> Acc. Date:{" "}
+                            {article.acceptanceDate
+                              ? new Date(article.acceptanceDate).toLocaleDateString()
+                              : "-"}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Calendar size={14} /> Pub. Date:{" "}
+                            {article.publicationDate
+                              ? new Date(article.publicationDate).toLocaleDateString()
+                              : "-"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+
+        {activeTab === "Articles" && (
+          <div className="space-y-8">
+             {articlesLoading ? (
+                  <div className="flex justify-center p-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00467F]"></div>
+                  </div>
+                ) : articles.length === 0 ? (
+                  <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                    <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500">No articles found for this journal.</p>
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm text-left">
+                        <thead className="bg-gray-50 text-gray-700 font-medium border-b border-gray-200">
+                          <tr>
+                            <th className="px-6 py-4">Article Title</th>
+                            <th className="px-6 py-4">Author(s)</th>
+                            <th className="px-6 py-4">Type</th>
+                            <th className="px-6 py-4">DOI</th>
+                            <th className="px-6 py-4">Accepted</th>
+                            <th className="px-6 py-4">Published</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {paginatedArticles.map((art) => (
+                            <tr
+                              key={art._id}
+                              className="hover:bg-gray-50/50 transition-colors"
+                            >
+                              <td className="px-6 py-4 font-medium text-[#00467F]">
+                                {art.articleTitle}
+                              </td>
+                              <td
+                                className="px-6 py-4 text-gray-600 max-w-[200px] truncate"
+                                title={art.authorName}
+                              >
+                                {art.authorName}
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className="px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
+                                  {art.articleType}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-gray-500">
+                                {art.doiNumber || "-"}
+                              </td>
+                              <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
+                                {art.acceptanceDate
+                                  ? new Date(art.acceptanceDate).toLocaleDateString()
+                                  : "-"}
+                              </td>
+                              <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
+                                {art.publicationDate
+                                  ? new Date(art.publicationDate).toLocaleDateString()
+                                  : "-"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                     {/* Pagination for Articles */}
+                     {articles.length > pageSize && (
+                        <div className="flex justify-between items-center p-4 border-t border-gray-100">
+                          <span className="text-sm text-gray-500">
+                            Showing {paginatedArticles.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to{' '}
+                            {Math.min(currentPage * pageSize, articles.length)} of {articles.length} entries
+                          </span>
+
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                              disabled={currentPage === 1}
+                              className={`px-3 py-1.5 border border-gray-200 rounded-md text-sm font-medium transition-colors
+                                ${currentPage === 1 
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                  : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer'}`}
+                            >
+                              Previous
+                            </button>
+
+                            {Array.from({ length: totalArticlePages }, (_, i) => i + 1).map((page) => (
+                              <button
+                                key={page}
+                                onClick={() => setCurrentPage(page)}
+                                className={`px-3 py-1.5 border rounded-md text-sm font-medium transition-colors
+                                  ${page === currentPage
+                                    ? 'bg-[#00467F] text-white border-[#00467F]'
+                                    : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:text-gray-900'}`}
+                              >
+                                {page}
+                              </button>
+                            ))}
+
+                            <button
+                              onClick={() => setCurrentPage(Math.min(totalArticlePages, currentPage + 1))}
+                              disabled={currentPage === totalArticlePages}
+                              className={`px-3 py-1.5 border border-gray-200 rounded-md text-sm font-medium transition-colors
+                                ${currentPage === totalArticlePages 
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                  : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer'}`}
+                            >
+                              Next
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                )}
+        </div>
+        )}
+
         {/* OTHER TABS */}
         {activeTab !== "Journal Home" &&
           activeTab !== "Editorial Board" &&
-          activeTab !== "Volumes/Issues" && (
+          activeTab !== "Volumes/Issues" &&
+          activeTab !== "Current Issue" &&
+          activeTab !== "Articles" && (
             <div className="rounded-xl border border-gray-200 bg-white p-6">
               <h3 className="text-lg font-semibold text-[#031E40] mb-2">
                 {activeTab}

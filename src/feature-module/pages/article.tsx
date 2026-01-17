@@ -517,8 +517,9 @@ const ArticlePage = () => {
                                   href={`${ImageUrl}${row.manuscriptFile}`}
                                   target="_blank"
                                   rel="noreferrer"
-                                  style={{ color: "#3e99a8", textDecoration: "underline" }}
+                                  style={{ color: "#3e99a8", textDecoration: "underline", display: "flex", alignItems: "center", gap: "4px" }}
                                 >
+                                <FileText className="w-3.5 h-3.5" />
                                   View
                                 </a>
                               ) : (

@@ -38,21 +38,35 @@ const Login = () => {
     (async () => {
       try {
         const res = await loginAdmin(email, password);
-        const data = res.data;
+        const data = res.data || res; // fallback if res is already the data
+        console.log("Full Login Response Data:", data);
+
         const token = data.token;
         const role = data.role;
-        console.log(token);
-        console.log(role);
         
-
         if (!token) {
           setError("Invalid credentials");
           setLoading(false);
           return;
         }
 
+        // Store complete user data
         localStorage.setItem("authToken", token);
         localStorage.setItem("userRole", role);
+        
+        // Attempt to extract user details from data.user or data directly
+        const userObj = data.user || data;
+        
+        const userInfo = {
+            id: userObj.id || userObj._id,
+            userName: userObj.userName || userObj.name || "Admin",
+            email: userObj.email,
+            journalImage: userObj.journalImage || userObj.image
+        };
+        
+        console.log("Storing User Info:", userInfo);
+        localStorage.setItem("userInfo", JSON.stringify(userInfo));
+
         navigate(all_routes.index);
       } catch (e) {
         setError(e?.message || "Login failed");

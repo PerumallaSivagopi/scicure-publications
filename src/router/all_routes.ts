@@ -8,7 +8,7 @@ export const all_routes = {
   notifications: '/notifications',
   manuscripts: '/manuscripts',
   contacts: '/contacts',
-  settings: '/settings',
+  settings: '/profile',
   authors: '/authors',
   journalDetails: '/journal-details',
 }

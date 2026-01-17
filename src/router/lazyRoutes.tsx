@@ -26,3 +26,4 @@ export const ContactEnquiries = createLazyComponent(() => import('../feature-mod
 export const SettingsPage = createLazyComponent(() => import('../feature-module/pages/profile'))
 export const ProfilePage = createLazyComponent(() => import('../feature-module/pages/profile'))
 export const JournalDetails = createLazyComponent(() => import('../feature-module/pages/journalDetails'))
+export const IndexingPage = createLazyComponent(() => import('../feature-module/pages/indexing'))

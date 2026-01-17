@@ -77,6 +77,7 @@ const Sidebar = () => {
             <NavIcon to={all_routes.manuscripts} icon="ti-id-badge" label="Manuscripts" />
             <NavIcon to={all_routes.contacts} icon="ti-user" label="Contact Enquiries" />
             <NavIcon to={all_routes.notifications} icon="ti-bell" label="Notifications" />
+            <NavIcon to={all_routes.indexing} icon="ti-photo" label="Indexing" />
             <NavIcon to={all_routes.settings} icon="ti-settings" label="Settings" />
           </>
         )}

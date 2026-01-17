@@ -37,7 +37,7 @@ const Header = () => {
   }, []);
   
   // Parse user info safely
-  const defaultUserInfo = { userName: "User", email: "admin@scicure.com", journalImage: "" };
+  const defaultUserInfo = { userName: "User", email: "admin@scicure.com", role: "", journalImage: "" };
   let userInfo = defaultUserInfo;
   try {
     const storedInfo = localStorage.getItem("userInfo");

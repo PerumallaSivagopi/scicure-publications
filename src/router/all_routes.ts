@@ -1,6 +1,7 @@
 export const all_routes = {
   login: '/login',
   index: '/index',
+  indexing: '/indexing',
   article: '/article',
   editorsBoard: '/editors-board',
   editorsChief: '/editors-chief',

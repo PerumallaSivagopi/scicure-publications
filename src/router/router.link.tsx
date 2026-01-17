@@ -1,7 +1,7 @@
 import React from 'react'
 import { Route, Navigate } from 'react-router-dom'
 import { all_routes } from './all_routes'
-import { Login, AdminDashboard, ArticlePage, EditorsBoard, EditorsChief, JournalsPage, NotificationsPage, ManuscriptsPage, SettingsPage, AuthorsPage, ContactEnquiries, JournalDetails, ProfilePage } from './lazyRoutes'
+import { Login, AdminDashboard, ArticlePage, EditorsBoard, EditorsChief, JournalsPage, NotificationsPage, ManuscriptsPage, SettingsPage, AuthorsPage, ContactEnquiries, JournalDetails, ProfilePage, IndexingPage } from './lazyRoutes'
 
 const routes = all_routes
 
@@ -16,6 +16,12 @@ export const publicRoutes = [
     path: routes.index,
     name: 'Index',
     element: <AdminDashboard />,
+    route: Route,
+  },
+  {
+    path: routes.indexing,
+    name: 'Indexing',
+    element: <IndexingPage />,
     route: Route,
   },
   {

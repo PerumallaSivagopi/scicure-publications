@@ -12,5 +12,6 @@ export const URLS = {
   USERS: `${Url}api/users`,
   CONTACTS: `${Url}api/messages`,
   ISSUES: `${Url}api/issues`,
+  INDEX: `${Url}api/index`,
   users : `${Url}srivatsav/api/admin/admin_login.php`,
 };

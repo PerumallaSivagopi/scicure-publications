@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { URLS, ImageUrl } from "../../Urls";
 import Modal from "../../components/ui/Modal";
 import DoiIcon from "../../assets/images/doi-image.png";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 import {
   Mail,
   University,
@@ -17,8 +19,16 @@ import {
   FileText,
   Calendar,
   AlertTriangle,
-  BookOpen
+  BookOpen,
+  Briefcase,
+  Building2,
+  Globe,
+  Phone,
+  Book,
+  Tag,
+  Upload
 } from "lucide-react";
+import { all_routes } from "../../router/all_routes";
 
 const tabs = [
   "Journal Home",
@@ -30,6 +40,7 @@ const tabs = [
 ];
 
 const JournalHome = () => {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("Journal Home");
   const [editors, setEditors] = useState<any[]>([]);
@@ -54,15 +65,47 @@ const [formData, setFormData] = useState({
   const [articles, setArticles] = useState<any[]>([]);
   const [articlesLoading, setArticlesLoading] = useState(false);
   
-  // Current Issue State
   const [currentIssueData, setCurrentIssueData] = useState<any>(null);
   const [currentIssueLoading, setCurrentIssueLoading] = useState(false);
   const [currentIssueError, setCurrentIssueError] = useState("");
 
-  // Delete Modal State
+  const userRole = localStorage.getItem("userRole") || "";
+  const canManageJournal = userRole === "journal" || userRole === "admin";
+
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [issueToDelete, setIssueToDelete] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [isEditorModalOpen, setIsEditorModalOpen] = useState(false);
+  const [isEditorEditMode, setIsEditorEditMode] = useState(false);
+  const [selectedEditor, setSelectedEditor] = useState<any>(null);
+  const [editorForm, setEditorForm] = useState({
+    editorName: "",
+    email: "",
+    designation: "",
+    institution: "",
+    country: "",
+  });
+
+  const [isEditorDeleteModalOpen, setIsEditorDeleteModalOpen] = useState(false);
+  const [editorToDelete, setEditorToDelete] = useState<any>(null);
+  const [isDeletingEditor, setIsDeletingEditor] = useState(false);
+
+  const [isJournalModalOpen, setIsJournalModalOpen] = useState(false);
+  const [isJournalSubmitting, setIsJournalSubmitting] = useState(false);
+  const [journalForm, setJournalForm] = useState({
+    email: "",
+    mobile: "",
+    journalName: "",
+    journalTitle: "",
+    journalISSN: "",
+    journalCategory: "",
+    journalDescription: "",
+  });
+  const [journalImageFile, setJournalImageFile] = useState<File | null>(null);
+  const [journalBgImageFile, setJournalBgImageFile] = useState<File | null>(null);
+  const [journalImagePreview, setJournalImagePreview] = useState<string | null>(null);
+  const [journalBgImagePreview, setJournalBgImagePreview] = useState<string | null>(null);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -170,7 +213,7 @@ const [formData, setFormData] = useState({
       .finally(() => setCurrentIssueLoading(false));
   };
 
-  useEffect(() => {
+  const fetchJournal = () => {
     const id = searchParams.get("id");
     const jid = searchParams.get("jid");
     const token = localStorage.getItem("authToken") || "";
@@ -203,9 +246,13 @@ const [formData, setFormData] = useState({
         setJournal(null);
       })
       .finally(() => setJournalLoading(false));
-  }, [searchParams]);
+  };
 
   useEffect(() => {
+    fetchJournal();
+  }, [searchParams]);
+
+  const loadEditors = () => {
     const token = localStorage.getItem("authToken") || "";
     setEditorsLoading(true);
     setEditorsError("");
@@ -237,7 +284,248 @@ const [formData, setFormData] = useState({
         setEditors([]);
       })
       .finally(() => setEditorsLoading(false));
+  };
+
+  useEffect(() => {
+    if (journal) {
+      loadEditors();
+    }
   }, [journal]);
+
+  const openAddEditorModal = () => {
+    setEditorForm({
+      editorName: "",
+      email: "",
+      designation: "",
+      institution: "",
+      country: "",
+    });
+    setSelectedEditor(null);
+    setIsEditorEditMode(false);
+    setIsEditorModalOpen(true);
+  };
+
+  const openEditEditorModal = (editor: any) => {
+    setEditorForm({
+      editorName: editor.editorName || "",
+      email: editor.email || "",
+      designation: editor.designation || "",
+      institution: editor.institution || "",
+      country: editor.country || "",
+    });
+    setSelectedEditor(editor);
+    setIsEditorEditMode(true);
+    setIsEditorModalOpen(true);
+  };
+
+  const handleEditorFormChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditorForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveEditor = async () => {
+    if (!editorForm.editorName || !editorForm.email) {
+      alert("Please fill in Name and Email");
+      return;
+    }
+    if (!journal?._id) return;
+
+    const token = localStorage.getItem("authToken") || "";
+
+    let url = URLS.EDITORS;
+    let method = "POST";
+
+    if (isEditorEditMode && selectedEditor?._id) {
+      url = `${URLS.EDITORS}/${selectedEditor._id}`;
+      method = "PUT";
+    }
+
+    const payload = {
+      ...editorForm,
+      journalId: journal._id,
+    };
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.message || "Failed to save editor");
+      }
+      alert(isEditorEditMode ? "Editor updated successfully" : "Editor added successfully");
+      setIsEditorModalOpen(false);
+      loadEditors();
+    } catch (error) {
+      alert("Failed to save editor");
+    }
+  };
+
+  const openEditJournalModal = () => {
+    if (!journal) return;
+    setJournalForm({
+      email: journal.email || "",
+      mobile: journal.mobile || "",
+      journalName: journal.journalName || "",
+      journalTitle: journal.journalTitle || "",
+      journalISSN: journal.journalISSN || "",
+      journalCategory: journal.journalCategory || "",
+      journalDescription: journal.journalDescription || "",
+    });
+    setJournalImageFile(null);
+    setJournalBgImageFile(null);
+    setJournalImagePreview(
+      journal.journalImage ? `${ImageUrl}${journal.journalImage}` : null
+    );
+    setJournalBgImagePreview(
+      journal.journalBgImage ? `${ImageUrl}${journal.journalBgImage}` : null
+    );
+    setIsJournalModalOpen(true);
+  };
+
+  const handleJournalInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setJournalForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleJournalDescriptionChange = (value: string) => {
+    setJournalForm((prev) => ({ ...prev, journalDescription: value }));
+  };
+
+  const handleJournalImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setJournalImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setJournalImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleJournalBgImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setJournalBgImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setJournalBgImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeJournalImage = () => {
+    setJournalImageFile(null);
+    setJournalImagePreview(null);
+  };
+
+  const removeJournalBgImage = () => {
+    setJournalBgImageFile(null);
+    setJournalBgImagePreview(null);
+  };
+
+  const handleJournalSave = async () => {
+    if (!journal?._id) return;
+    if (
+      !journalForm.email ||
+      !journalForm.mobile ||
+      !journalForm.journalName ||
+      !journalForm.journalTitle ||
+      !journalForm.journalISSN
+    ) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    setIsJournalSubmitting(true);
+
+    try {
+      const token = localStorage.getItem("authToken") || "";
+      const data = new FormData();
+
+      data.append("email", journalForm.email);
+      data.append("mobile", journalForm.mobile);
+      data.append("journalName", journalForm.journalName);
+      data.append("journalTitle", journalForm.journalTitle);
+      data.append("journalISSN", journalForm.journalISSN);
+      data.append("journalCategory", journalForm.journalCategory);
+      data.append("journalDescription", journalForm.journalDescription);
+
+      if (journalImageFile) {
+        data.append("journalImage", journalImageFile);
+      }
+      if (journalBgImageFile) {
+        data.append("journalBgImage", journalBgImageFile);
+      }
+
+      const url = `${URLS.USERS}/update/${journal._id}`;
+
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: data,
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("Journal updated successfully!");
+        setIsJournalModalOpen(false);
+        fetchJournal();
+      } else {
+        alert(result.message || "Failed to update journal");
+      }
+    } catch (error) {
+      alert("An error occurred while updating the journal");
+    } finally {
+      setIsJournalSubmitting(false);
+    }
+  };
+
+  const handleDeleteEditor = (editor: any) => {
+    setEditorToDelete(editor);
+    setIsEditorDeleteModalOpen(true);
+  };
+
+  const confirmDeleteEditor = async () => {
+    if (!editorToDelete?._id) return;
+    const token = localStorage.getItem("authToken") || "";
+    setIsDeletingEditor(true);
+
+    try {
+      const res = await fetch(`${URLS.EDITORS}/${editorToDelete._id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.message || "Failed to delete editor");
+      }
+      alert("Editor deleted successfully");
+      setIsEditorDeleteModalOpen(false);
+      setEditorToDelete(null);
+      loadEditors();
+    } catch (error) {
+      alert("Failed to delete editor");
+    } finally {
+      setIsDeletingEditor(false);
+    }
+  };
 
 
 
@@ -350,6 +638,16 @@ const [formData, setFormData] = useState({
         <div className="absolute inset-0 bg-black/55" />
 
         <div className="relative z-10 h-full max-w-7xl mx-auto px-4 flex flex-col justify-center">
+          {canManageJournal && journal && (
+            <div className="absolute right-4 top-4 md:right-8 md:top-6">
+              <button
+                onClick={openEditJournalModal}
+                className="px-4 py-2 rounded-full bg-white text-[#00467F] text-sm font-semibold shadow-sm hover:bg-gray-100 transition-colors"
+              >
+                Edit Journal
+              </button>
+            </div>
+          )}
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
             {journal?.journalTitle || journal?.journalName || "Journal"}
           </h1>
@@ -459,6 +757,18 @@ const [formData, setFormData] = useState({
 
             {!editorsLoading && !editorsError && (
               <>
+                {canManageJournal && (
+                  <div className="flex justify-end">
+                    <button
+                      onClick={openAddEditorModal}
+                      className="px-4 py-2 bg-[#00467F] text-white rounded-lg text-sm font-medium hover:bg-[#003366] transition-colors inline-flex items-center gap-2 shadow-sm"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Editor
+                    </button>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
                   {paginatedEditors.map((e, idx) => (
                     <div
@@ -468,26 +778,42 @@ const [formData, setFormData] = useState({
                       <div className="h-1.5 bg-[#00467F] rounded-t-xl" />
 
                       <div className="p-5 flex flex-col gap-3">
-                        {/* Name */}
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-[#00467F]" />
-                          <h3 className="font-semibold text-[#031E40]">
-                            {e.editorName || "-"}
-                          </h3>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-[#00467F]" />
+                            <h3 className="font-semibold text-[#031E40]">
+                              {e.editorName || "-"}
+                            </h3>
+                          </div>
+                          {canManageJournal && (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => openEditEditorModal(e)}
+                                className="p-2 text-[#e1b225] bg-[#e1b225]/10 hover:bg-[#e1b225]/20 rounded-lg transition-colors"
+                                title="Edit Editor"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteEditor(e)}
+                                className="p-2 text-[#bd3846] bg-[#bd3846]/10 hover:bg-[#bd3846]/20 rounded-lg transition-colors"
+                                title="Delete Editor"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
                         </div>
 
-                        {/* Designation */}
                         <p className="text-sm font-medium text-[#00467F]">
                           {e.designation || "-"}
                         </p>
 
-                        {/* Institution */}
                         <div className="flex items-start gap-2 text-sm text-gray-700">
                           <University className="h-4 w-4 mt-0.5 text-gray-500" />
                           <span>{e.institution || "-"}</span>
                         </div>
 
-                        {/* Country */}
                         {e.country && (
                           <div className="flex items-center gap-2 text-sm text-gray-700">
                             <MapPin className="h-4 w-4 text-gray-500" />
@@ -495,7 +821,6 @@ const [formData, setFormData] = useState({
                           </div>
                         )}
 
-                        {/* Email */}
                         <div className="flex items-center gap-2 text-sm">
                           <Mail className="h-4 w-4 text-gray-500" />
                           <a
@@ -516,46 +841,65 @@ const [formData, setFormData] = useState({
                   )}
                 </div>
 
-                {/* Pagination */}
                 {editors.length > pageSize && (
                   <div className="mt-8 flex justify-between items-center border-t border-gray-100 pt-4">
                     <span className="text-sm text-gray-500">
-                      Showing {paginatedEditors.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to{' '}
-                      {Math.min(currentPage * pageSize, editors.length)} of {editors.length} entries
+                      Showing{" "}
+                      {paginatedEditors.length > 0
+                        ? (currentPage - 1) * pageSize + 1
+                        : 0}{" "}
+                      to{" "}
+                      {Math.min(currentPage * pageSize, editors.length)} of{" "}
+                      {editors.length} entries
                     </span>
 
                     <div className="flex gap-1">
                       <button
-                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                        onClick={() =>
+                          setCurrentPage(Math.max(1, currentPage - 1))
+                        }
                         disabled={currentPage === 1}
                         className={`px-3 py-1.5 border border-gray-200 rounded-md text-sm font-medium transition-colors
-                          ${currentPage === 1 
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                            : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer'}`}
+                          ${
+                            currentPage === 1
+                              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                              : "bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
+                          }`}
                       >
                         Previous
                       </button>
 
-                      {Array.from({ length: totalEditorPages }, (_, i) => i + 1).map((page) => (
+                      {Array.from(
+                        { length: totalEditorPages },
+                        (_, i) => i + 1
+                      ).map((page) => (
                         <button
                           key={page}
                           onClick={() => setCurrentPage(page)}
                           className={`px-3 py-1.5 border rounded-md text-sm font-medium transition-colors
-                            ${page === currentPage
-                              ? 'bg-[#00467F] text-white border-[#00467F]'
-                              : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:text-gray-900'}`}
+                            ${
+                              page === currentPage
+                                ? "bg-[#00467F] text-white border-[#00467F]"
+                                : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:text-gray-900"
+                            }`}
                         >
                           {page}
                         </button>
                       ))}
 
                       <button
-                        onClick={() => setCurrentPage(Math.min(totalEditorPages, currentPage + 1))}
+                        onClick={() =>
+                          setCurrentPage(
+                            Math.min(totalEditorPages, currentPage + 1)
+                          )
+                        }
                         disabled={currentPage === totalEditorPages}
                         className={`px-3 py-1.5 border border-gray-200 rounded-md text-sm font-medium transition-colors
-                          ${currentPage === totalEditorPages 
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                            : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer'}`}
+                          ${
+                            currentPage === totalEditorPages
+                              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                              : "bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
+                          }`}
                       >
                         Next
                       </button>
@@ -1156,6 +1500,453 @@ const [formData, setFormData] = useState({
         </div>
       </Modal>
 
+      <Modal
+        isOpen={isJournalModalOpen}
+        onClose={() => setIsJournalModalOpen(false)}
+        title="Edit Journal"
+        maxWidth="max-w-4xl"
+        footer={
+          <>
+            <button
+              onClick={() => setIsJournalModalOpen(false)}
+              className="px-5 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 focus:ring-2 focus:ring-gray-200 outline-none"
+              disabled={isJournalSubmitting}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleJournalSave}
+              disabled={isJournalSubmitting}
+              className="px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-[#00467F] to-[#0078A8] rounded-xl hover:shadow-lg hover:shadow-blue-900/20 hover:from-[#031E40] hover:to-[#00467F] transition-all duration-200 transform hover:-translate-y-0.5 focus:ring-2 focus:ring-[#00467F] outline-none disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isJournalSubmitting ? "Saving..." : "Save Journal"}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-5">
+          <div className="pb-4 border-b border-gray-100">
+            <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">
+              User Details
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                  Email *
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Mail size={18} />
+                  </div>
+                  <input
+                    type="email"
+                    name="email"
+                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                    value={journalForm.email}
+                    onChange={handleJournalInputChange}
+                    placeholder="email@example.com"
+                  />
+                </div>
+              </div>
+
+              <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                  Mobile *
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Phone size={18} />
+                  </div>
+                  <input
+                    type="text"
+                    name="mobile"
+                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                    value={journalForm.mobile}
+                    onChange={handleJournalInputChange}
+                    placeholder="Enter mobile number"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">
+              Journal Details
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+              <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                  Journal Name *
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Book size={18} />
+                  </div>
+                  <input
+                    type="text"
+                    name="journalName"
+                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                    value={journalForm.journalName}
+                    onChange={handleJournalInputChange}
+                    placeholder="e.g. Japan"
+                  />
+                </div>
+              </div>
+
+              <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                  Journal Title *
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <BookOpen size={18} />
+                  </div>
+                  <input
+                    type="text"
+                    name="journalTitle"
+                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                    value={journalForm.journalTitle}
+                    onChange={handleJournalInputChange}
+                    placeholder="e.g. Japan Medical Journal"
+                  />
+                </div>
+              </div>
+
+              <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                  ISSN Number *
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Tag size={18} />
+                  </div>
+                  <input
+                    type="text"
+                    name="journalISSN"
+                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                    value={journalForm.journalISSN}
+                    onChange={handleJournalInputChange}
+                    placeholder="e.g. 852-456"
+                  />
+                </div>
+              </div>
+
+              <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                  Category
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Tag size={18} />
+                  </div>
+                  <select
+                    name="journalCategory"
+                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                    value={journalForm.journalCategory}
+                    onChange={handleJournalInputChange}
+                  >
+                    <option value="">Select Category</option>
+                    <option value="Medical">Medical</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Science">Science</option>
+                    <option value="Others">Others</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-5">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                Journal Image
+              </label>
+              <div
+                className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:bg-gray-50 transition-colors cursor-pointer relative"
+                onClick={() =>
+                  document.getElementById("jd-journal-image-upload")?.click()
+                }
+              >
+                <div className="space-y-1 text-center">
+                  {journalImagePreview ? (
+                    <div className="relative inline-block">
+                      <img
+                        src={journalImagePreview}
+                        alt="Preview"
+                        className="h-32 object-contain rounded-md"
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeJournalImage();
+                        }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                      <div className="flex text-sm text-gray-600 justify-center">
+                        <span className="relative cursor-pointer bg-white rounded-md font-medium text-[#00467F] hover:text-[#003366] focus-within:outline-none">
+                          Upload a file
+                        </span>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        PNG, JPG, GIF up to 10MB
+                      </p>
+                    </>
+                  )}
+                  <input
+                    id="jd-journal-image-upload"
+                    name="journalImage"
+                    type="file"
+                    className="sr-only"
+                    onChange={handleJournalImageChange}
+                    accept="image/*"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-5">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                Journal Background Image
+              </label>
+              <div
+                className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:bg-gray-50 transition-colors cursor-pointer relative"
+                onClick={() =>
+                  document
+                    .getElementById("jd-journal-bg-image-upload")
+                    ?.click()
+                }
+              >
+                <div className="space-y-1 text-center">
+                  {journalBgImagePreview ? (
+                    <div className="relative inline-block">
+                      <img
+                        src={journalBgImagePreview}
+                        alt="Preview"
+                        className="h-32 object-contain rounded-md"
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeJournalBgImage();
+                        }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                      <div className="flex text-sm text-gray-600 justify-center">
+                        <span className="relative cursor-pointer bg-white rounded-md font-medium text-[#00467F] hover:text-[#003366] focus-within:outline-none">
+                          Upload a file
+                        </span>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        PNG, JPG, GIF up to 10MB
+                      </p>
+                    </>
+                  )}
+                  <input
+                    id="jd-journal-bg-image-upload"
+                    name="journalBgImage"
+                    type="file"
+                    className="sr-only"
+                    onChange={handleJournalBgImageChange}
+                    accept="image/*"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="relative">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                Description
+              </label>
+              <div className="react-quill-container">
+                <style>{`
+                  .ql-container {
+                    min-height: 200px;
+                    border-bottom-left-radius: 0.5rem;
+                    border-bottom-right-radius: 0.5rem;
+                  }
+                  .ql-toolbar {
+                    border-top-left-radius: 0.5rem;
+                    border-top-right-radius: 0.5rem;
+                  }
+                `}</style>
+                <ReactQuill
+                  theme="snow"
+                  value={journalForm.journalDescription}
+                  onChange={handleJournalDescriptionChange}
+                  placeholder="Enter journal description..."
+                  modules={{
+                    toolbar: [
+                      [{ header: [1, 2, false] }],
+                      ["bold", "italic", "underline", "strike", "blockquote"],
+                      [
+                        { list: "ordered" },
+                        { list: "bullet" },
+                        { indent: "-1" },
+                        { indent: "+1" },
+                      ],
+                      ["link", "image"],
+                      ["clean"],
+                    ],
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={isEditorModalOpen}
+        onClose={() => setIsEditorModalOpen(false)}
+        title={isEditorEditMode ? "Edit Editor" : "Add New Editor"}
+        maxWidth="max-w-4xl"
+        footer={
+          <>
+            <button
+              onClick={() => setIsEditorModalOpen(false)}
+              className="px-5 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 focus:ring-2 focus:ring-gray-200 outline-none"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveEditor}
+              className="px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-[#00467F] to-[#0078A8] rounded-xl hover:shadow-lg hover:shadow-blue-900/20 hover:from-[#031E40] hover:to-[#00467F] transition-all duration-200 transform hover:-translate-y-0.5 focus:ring-2 focus:ring-[#00467F] outline-none"
+            >
+              {isEditorEditMode ? "Update Editor" : "Save Editor"}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-5">
+          <div className="relative">
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+              Editor Name *
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <User size={18} />
+              </div>
+              <input
+                type="text"
+                name="editorName"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                value={editorForm.editorName}
+                onChange={handleEditorFormChange}
+                placeholder="Enter full name"
+              />
+            </div>
+          </div>
+
+          <div className="relative">
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+              Journal
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <BookOpen size={18} />
+              </div>
+              <input
+                type="text"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-100 border border-gray-200 text-gray-900 text-sm rounded-xl"
+                value={journal?.journalTitle || journal?.journalName || ""}
+                readOnly
+              />
+            </div>
+          </div>
+
+          <div className="relative">
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+              Email *
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <Mail size={18} />
+              </div>
+              <input
+                type="email"
+                name="email"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                value={editorForm.email}
+                onChange={handleEditorFormChange}
+                placeholder="email@example.com"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="relative">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                Designation
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                  <Briefcase size={18} />
+                </div>
+                <input
+                  type="text"
+                  name="designation"
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                  value={editorForm.designation}
+                  onChange={handleEditorFormChange}
+                  placeholder="e.g. Professor"
+                />
+              </div>
+            </div>
+
+            <div className="relative">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                Country
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                  <Globe size={18} />
+                </div>
+                <input
+                  type="text"
+                  name="country"
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                  value={editorForm.country}
+                  onChange={handleEditorFormChange}
+                  placeholder="Enter country"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="relative">
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+              Institution
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <Building2 size={18} />
+              </div>
+              <input
+                type="text"
+                name="institution"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
+                value={editorForm.institution}
+                onChange={handleEditorFormChange}
+                placeholder="Enter university or organization"
+              />
+            </div>
+          </div>
+        </div>
+      </Modal>
+
       {/* DELETE CONFIRMATION MODAL */}
       <Modal
         isOpen={isDeleteModalOpen}
@@ -1188,6 +1979,43 @@ const [formData, setFormData] = useState({
             Are you sure you want to delete{" "}
             <span className="font-semibold text-gray-900">
               Volume {issueToDelete?.volume}, Issue {issueToDelete?.issue}
+            </span>
+            ? This action cannot be undone.
+          </p>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={isEditorDeleteModalOpen}
+        onClose={() => setIsEditorDeleteModalOpen(false)}
+        title={
+          <div className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <Trash2 size={24} className="text-red-600" /> Confirm Delete
+          </div>
+        }
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setIsEditorDeleteModalOpen(false)}
+              className="px-5 py-2.5 rounded-lg text-gray-700 font-medium hover:bg-gray-100 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmDeleteEditor}
+              disabled={isDeletingEditor}
+              className="px-5 py-2.5 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 shadow-lg shadow-red-600/20 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2"
+            >
+              {isDeletingEditor ? "Deleting..." : "Delete Editor"}
+            </button>
+          </div>
+        }
+      >
+        <div className="py-4">
+          <p className="text-gray-600 text-base leading-relaxed">
+            Are you sure you want to delete{" "}
+            <span className="font-semibold text-gray-900">
+              {editorToDelete?.editorName}
             </span>
             ? This action cannot be undone.
           </p>

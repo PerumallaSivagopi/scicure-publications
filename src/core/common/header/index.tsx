@@ -37,7 +37,7 @@ const Header = () => {
   }, []);
   
   // Parse user info safely
-  const defaultUserInfo = { userName: "Admin", email: "admin@scicure.com", journalImage: "" };
+  const defaultUserInfo = { userName: "User", email: "admin@scicure.com", journalImage: "" };
   let userInfo = defaultUserInfo;
   try {
     const storedInfo = localStorage.getItem("userInfo");
@@ -99,7 +99,7 @@ const Header = () => {
                  />
               </div>
               <div className="hidden md:flex flex-col items-start text-left">
-                  <span className="text-sm font-semibold text-[#031E40] leading-none capitalize">{userInfo.userName || userRole}</span>
+                  <span className="text-sm font-semibold text-[#031E40] leading-none">{userInfo.email || userRole}</span>
                   <span className="text-[10px] text-gray-500">{userInfo.role || userRole}</span>
               </div>
               <ChevronDown size={16} className={`text-gray-500 transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
@@ -107,7 +107,7 @@ const Header = () => {
 
             {/* Dropdown */}
             {isProfileOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-40 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                 <div className="px-4 py-3 border-b border-gray-50">
                   <p className="text-sm font-bold text-[#031E40] capitalize">{userInfo.userName || userRole}</p>
                   <p className="text-xs text-gray-500 truncate" title={userInfo.email}>{userInfo.email}</p>

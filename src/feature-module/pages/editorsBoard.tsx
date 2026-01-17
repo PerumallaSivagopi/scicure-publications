@@ -3,6 +3,7 @@ import "../../assets/css/onboarding.css";
 import { Eye, Edit, Trash2, Plus, User, Mail, Briefcase, Building2, Globe, BookOpen } from "lucide-react";
 import Modal from "../../components/ui/Modal";
 import { URLS } from "../../Urls";
+import { all_routes } from "../../router/all_routes";
 
 interface Editor {
   _id?: string;
@@ -42,9 +43,79 @@ const EditorsBoard = () => {
     journalId: "",
   });
 
-  // Fetch Journals for dropdown
+  const filterEditorsByJournal = (items: Editor[]): Editor[] => {
+    const role = (localStorage.getItem("userRole") || "").toLowerCase();
+
+    if (role !== "journal") {
+      return items;
+    }
+
+    let journalUserId = "";
+
+    try {
+      const storedInfo = localStorage.getItem("userInfo");
+      if (storedInfo) {
+        const parsed = JSON.parse(storedInfo);
+        journalUserId = parsed.id || parsed._id || "";
+      }
+    } catch {
+      journalUserId = "";
+    }
+
+    if (!journalUserId) {
+      return items;
+    }
+
+    return items.filter((item: any) => {
+      let itemJournalId: string | undefined = "";
+
+      if (typeof item.journalId === "object" && item.journalId) {
+        itemJournalId =
+          (item.journalId as any)._id ||
+          (item.journalId as any).journalId ||
+          "";
+      } else {
+        itemJournalId = item.journalId;
+      }
+
+      return (
+        itemJournalId && String(itemJournalId) === String(journalUserId)
+      );
+    });
+  };
+
   useEffect(() => {
     const token = localStorage.getItem("authToken") || "";
+    fetch(URLS.EDITORS, {
+      method: "GET",
+      headers: {
+        "content-type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((result) => {
+        let list: Editor[] = [];
+
+        if (Array.isArray(result)) {
+          list = result;
+        } else if (result && Array.isArray(result.data)) {
+          list = result.data;
+        }
+
+        list = filterEditorsByJournal(list);
+        setEditors(list);
+      })
+      .catch((err) => {
+        console.error("Error fetching editors:", err);
+        setEditors([]);
+      });
+  }, []);
+
+  useEffect(() => {
+    const role = (localStorage.getItem("userRole") || "").toLowerCase();
+    const token = localStorage.getItem("authToken") || "";
+
     fetch(URLS.USERS, {
       method: "GET",
       headers: {
@@ -52,24 +123,64 @@ const EditorsBoard = () => {
         "Authorization": `Bearer ${token}`,
       },
     })
-      .then(res => res.json())
-      .then(result => {
+      .then((res) => res.json())
+      .then((result) => {
         if (result.data && Array.isArray(result.data)) {
-          const journalData = result.data.filter((item: any) => item.role === 'journal');
+          let journalData = result.data.filter(
+            (item: any) => item.role === "journal"
+          );
+
+          if (role === "journal") {
+            let journalUserId = "";
+
+            try {
+              const storedInfo = localStorage.getItem("userInfo");
+              if (storedInfo) {
+                const parsed = JSON.parse(storedInfo);
+                journalUserId = parsed.id || parsed._id || "";
+              }
+            } catch {
+              journalUserId = "";
+            }
+
+            if (journalUserId) {
+              journalData = journalData.filter(
+                (j: any) =>
+                  String(j._id) === String(journalUserId) ||
+                  String(j.journalId) === String(journalUserId)
+              );
+            }
+          }
+
           setJournals(journalData);
         }
       })
-      .catch(err => console.error("Error fetching journals:", err));
+      .catch((err) => console.error("Error fetching journals:", err));
   }, []);
 
   const resetForm = () => {
+    const role = (localStorage.getItem("userRole") || "").toLowerCase();
+    let defaultJournalId = "";
+
+    if (role === "journal") {
+      try {
+        const storedInfo = localStorage.getItem("userInfo");
+        if (storedInfo) {
+          const parsed = JSON.parse(storedInfo);
+          defaultJournalId = parsed.id || parsed._id || "";
+        }
+      } catch {
+        defaultJournalId = "";
+      }
+    }
+
     setNewEditor({
       editorName: "",
       email: "",
       designation: "",
       institution: "",
       country: "",
-      journalId: "",
+      journalId: defaultJournalId,
     });
     setSelectedEditor(null);
     setIsEditMode(false);
@@ -119,43 +230,24 @@ const EditorsBoard = () => {
     })
     .then(res => res && res.json())
     .then(result => {
-       if (result && Array.isArray(result)) {
-          setEditors(result);
-       } else if (result) { // Handle case where refetch might return object wrapper
-           // If direct array
-           if (Array.isArray(result)) setEditors(result);
-           // If wrapped in data
-           else if (result.data && Array.isArray(result.data)) setEditors(result.data);
-       }
+        if (result) {
+          let list: Editor[] = [];
+
+          if (Array.isArray(result)) {
+            list = result;
+          } else if (result && Array.isArray(result.data)) {
+            list = result.data;
+          }
+
+          list = filterEditorsByJournal(list);
+          setEditors(list);
+        }
     })
     .catch(err => {
       console.error("Error saving editor:", err);
       alert("Failed to save editor");
     });
   };
-
-  useEffect(() => {
-    const token = localStorage.getItem("authToken") || "";
-    fetch(URLS.EDITORS, {
-      method: "GET",
-      headers: {
-        "content-type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((result) => {
-        if (Array.isArray(result)) {
-          setEditors(result);
-        } else {
-          setEditors([]);
-        }
-      })
-      .catch((err) => {
-        console.error("Error fetching editors:", err);
-        setEditors([]);
-      });
-  }, []);
 
   const handleView = (row: Editor) => {
     setSelectedEditor(row);
@@ -201,20 +293,28 @@ const EditorsBoard = () => {
               }
           });
 
-          if (response.ok) {
-              alert("Editor deleted successfully");
-               // Refetch
-               const res = await fetch(URLS.EDITORS, {
-                 method: "GET",
-                 headers: {
-                   "content-type": "application/json",
-                   "Authorization": `Bearer ${token}`,
-                 },
-               });
-               const result = await res.json();
-               if (Array.isArray(result)) {
-                   setEditors(result);
-               }
+        if (response.ok) {
+          alert("Editor deleted successfully");
+          const res = await fetch(URLS.EDITORS, {
+            method: "GET",
+            headers: {
+              "content-type": "application/json",
+              "Authorization": `Bearer ${token}`,
+            },
+          });
+          const result = await res.json();
+          if (result) {
+            let list: Editor[] = [];
+
+            if (Array.isArray(result)) {
+              list = result;
+            } else if (result && Array.isArray(result.data)) {
+              list = result.data;
+            }
+
+            list = filterEditorsByJournal(list);
+            setEditors(list);
+          }
           } else {
               alert("Failed to delete editor");
           }
@@ -263,7 +363,49 @@ const EditorsBoard = () => {
                 <h3 className="page-title">Editors Board</h3>
                 <ul className="breadcrumb">
                   <li className="breadcrumb-item">
-                    <a href="/index">Dashboard</a>
+                    <a
+                      href={
+                        (localStorage.getItem("userRole") || "").toLowerCase() ===
+                          "journal" &&
+                        (() => {
+                          try {
+                            const stored = localStorage.getItem("userInfo");
+                            if (stored) {
+                              const parsed = JSON.parse(stored);
+                              const id = parsed.id || parsed._id;
+                              if (id) {
+                                return `${all_routes.journalDetails}?id=${encodeURIComponent(
+                                  id
+                                )}`;
+                              }
+                            }
+                          } catch {
+                            return all_routes.index;
+                          }
+                          return all_routes.index;
+                        })()
+                          ? (() => {
+                              try {
+                                const stored = localStorage.getItem("userInfo");
+                                if (stored) {
+                                  const parsed = JSON.parse(stored);
+                                  const id = parsed.id || parsed._id;
+                                  if (id) {
+                                    return `${all_routes.journalDetails}?id=${encodeURIComponent(
+                                      id
+                                    )}`;
+                                  }
+                                }
+                              } catch {
+                                return all_routes.index;
+                              }
+                              return all_routes.index;
+                            })()
+                          : all_routes.index
+                      }
+                    >
+                      Dashboard
+                    </a>
                   </li>
                   <li className="breadcrumb-item active">Editors Board</li>
                 </ul>

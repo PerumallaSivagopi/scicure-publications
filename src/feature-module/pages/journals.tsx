@@ -4,7 +4,7 @@ import { URLS, ImageUrl } from '../../Urls';
 import Modal from '../../components/ui/Modal';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { all_routes } from '../../router/all_routes';
 
 
@@ -32,6 +32,7 @@ const JournalsPage = () => {
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -59,7 +60,7 @@ const JournalsPage = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-
+ 
   useEffect(() => {
     fetchJournals();
   }, []);
@@ -78,6 +79,16 @@ const JournalsPage = () => {
         if (result.data && Array.isArray(result.data)) {
           const journalData = result.data.filter((item: any) => item.role === 'journal');
           setJournals(journalData);
+
+          const editId = searchParams.get('editId');
+          if (editId) {
+            const found = journalData.find(
+              (j: any) => String(j._id) === String(editId)
+            );
+            if (found) {
+              handleEdit(found as any);
+            }
+          }
         } else {
           setJournals([]);
         }
@@ -323,7 +334,9 @@ const JournalsPage = () => {
               <div>
                 <h3 className="page-title">Journals</h3>
                 <ul className="breadcrumb">
-                  <li className="breadcrumb-item"><a href="/index">Dashboard</a></li>
+                  <li className="breadcrumb-item">
+                    <a href={all_routes.index}>Dashboard</a>
+                  </li>
                   <li className="breadcrumb-item active">Journals</li>
                 </ul>
               </div>

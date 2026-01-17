@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import "../../assets/css/onboarding.css";
 import { Eye, Edit, Trash2, Check, X, Upload, Plus, User, Mail, FileText, Calendar, Tag, BookOpen, Layers, Hash } from "lucide-react";
 import { URLS, ImageUrl } from "../../Urls";
+import { all_routes } from "../../router/all_routes";
 import Modal from "../../components/ui/Modal";
 
 interface Article {
@@ -44,6 +45,26 @@ interface Journal {
   role?: string;
 }
 
+const getCurrentUserRole = () => {
+  return (localStorage.getItem("userRole") || "").toLowerCase();
+};
+
+const getCurrentJournalUserId = () => {
+  let journalUserId = "";
+
+  try {
+    const storedInfo = localStorage.getItem("userInfo");
+    if (storedInfo) {
+      const parsed = JSON.parse(storedInfo);
+      journalUserId = parsed.id || parsed._id || "";
+    }
+  } catch {
+    journalUserId = "";
+  }
+
+  return journalUserId;
+};
+
 const ArticlePage = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [journals, setJournals] = useState<Journal[]>([]);
@@ -60,10 +81,12 @@ const ArticlePage = () => {
 
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 
-  // Form State
+  const userRole = getCurrentUserRole();
+  const currentJournalUserId = getCurrentJournalUserId();
+
   const [newArticle, setNewArticle] = useState({
     articleTitle: "",
-    journalId: "",
+    journalId: userRole === "journal" ? currentJournalUserId : "",
     issueId: "",
     authorName: "",
     authorEmail: "",
@@ -86,7 +109,6 @@ const ArticlePage = () => {
   const manuscriptInputRef = useRef<HTMLInputElement>(null);
   const coverImageInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch Articles
   const fetchArticles = () => {
     const token = localStorage.getItem("authToken") || "";
     fetch(URLS.ARTICLES, {
@@ -98,11 +120,32 @@ const ArticlePage = () => {
     })
       .then((res) => res.json())
       .then((result) => {
+        let list: any[] = [];
+
         if (Array.isArray(result)) {
-          setArticles(result);
-        } else {
-          setArticles([]);
+          list = result;
+        } else if (result && Array.isArray(result.data)) {
+          list = result.data;
         }
+
+        if (userRole === "journal" && currentJournalUserId) {
+          list = list.filter((item: any) => {
+            let itemJournalId: string | undefined = "";
+
+            if (typeof item.journalId === "object" && item.journalId) {
+              itemJournalId =
+                (item.journalId as any)._id ||
+                (item.journalId as any).journalId ||
+                "";
+            } else {
+              itemJournalId = item.journalId;
+            }
+
+            return itemJournalId && String(itemJournalId) === String(currentJournalUserId);
+          });
+        }
+
+        setArticles(list);
       })
       .catch((err) => {
         console.error("Error fetching articles:", err);
@@ -110,7 +153,6 @@ const ArticlePage = () => {
       });
   };
 
-  // Fetch Journals
   const fetchJournals = () => {
     const token = localStorage.getItem("authToken") || "";
     fetch(URLS.USERS, {
@@ -123,8 +165,18 @@ const ArticlePage = () => {
       .then((res) => res.json())
       .then((result) => {
         if (result.data && Array.isArray(result.data)) {
-          // Filter for journals
-          const journalData = result.data.filter((item: Journal) => item.role === 'journal');
+          let journalData = result.data.filter(
+            (item: Journal) => item.role === "journal"
+          );
+
+          if (userRole === "journal" && currentJournalUserId) {
+            journalData = journalData.filter(
+              (j: any) =>
+                String(j._id) === String(currentJournalUserId) ||
+                String((j as any).journalId) === String(currentJournalUserId)
+            );
+          }
+
           setJournals(journalData);
         }
       })
@@ -188,7 +240,7 @@ const ArticlePage = () => {
   const resetForm = () => {
     setNewArticle({
       articleTitle: "",
-      journalId: "",
+      journalId: userRole === "journal" ? currentJournalUserId : "",
       issueId: "",
       authorName: "",
       authorEmail: "",
@@ -374,7 +426,17 @@ const ArticlePage = () => {
                 <h3 className="page-title">Articles</h3>
                 <ul className="breadcrumb">
                   <li className="breadcrumb-item">
-                    <a href="/index">Dashboard</a>
+                    <a
+                      href={
+                        userRole === "journal" && currentJournalUserId
+                          ? `${all_routes.journalDetails}?id=${encodeURIComponent(
+                              currentJournalUserId
+                            )}`
+                          : all_routes.index
+                      }
+                    >
+                      Dashboard
+                    </a>
                   </li>
                   <li className="breadcrumb-item active">Articles</li>
                 </ul>
@@ -662,6 +724,7 @@ const ArticlePage = () => {
                 className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white appearance-none"
                 value={newArticle.journalId}
                 onChange={(e) => setNewArticle({ ...newArticle, journalId: e.target.value })}
+                disabled={userRole === "journal"}
               >
                 <option value="">Select Journal</option>
                 {journals.map((journal) => (

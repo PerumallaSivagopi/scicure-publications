@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { URLS, Url } from "../../Urls";
+import { all_routes } from "../../router/all_routes";
 import "../../assets/css/onboarding.css";
 import { Eye, Edit, Trash2, FileText, Check, X, Upload, User, Mail, Phone, MapPin, Building, BookOpen } from "lucide-react";
 import Modal from "../../components/ui/Modal";
@@ -30,6 +31,19 @@ const ManuscriptsPage = () => {
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const userRole = (localStorage.getItem("userRole") || "").toLowerCase();
+
+  let currentJournalUserId = "";
+  try {
+    const storedInfo = localStorage.getItem("userInfo");
+    if (storedInfo) {
+      const parsed = JSON.parse(storedInfo);
+      currentJournalUserId = parsed.id || parsed._id || "";
+    }
+  } catch {
+    currentJournalUserId = "";
+  }
+
   useEffect(() => {
     const token = localStorage.getItem("authToken") || "";
     fetch(URLS.MANUSCRIPTS,
@@ -43,13 +57,16 @@ const ManuscriptsPage = () => {
     )
       .then((res) => res.json())
       .then((result) => {
+        let list: Manuscript[] = [];
+
         if (Array.isArray(result)) {
-          setEditors(result);
+          list = result;
         } else if (result && result.data && Array.isArray(result.data)) {
-          setEditors(result.data);
-        } else {
-          setEditors([]);
+          list = result.data;
         }
+
+        list = filterManuscriptsByJournal(list);
+        setEditors(list);
       })
       .catch((err) => {
         console.error("Error fetching manuscripts:", err);
@@ -66,6 +83,47 @@ const ManuscriptsPage = () => {
 
   const [journals, setJournals] = useState<any[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const filterManuscriptsByJournal = (items: Manuscript[]): Manuscript[] => {
+    const role = (localStorage.getItem("userRole") || "").toLowerCase();
+
+    if (role !== "journal") {
+      return items;
+    }
+
+    let journalUserId = "";
+
+    try {
+      const storedInfo = localStorage.getItem("userInfo");
+      if (storedInfo) {
+        const parsed = JSON.parse(storedInfo);
+        journalUserId = parsed.id || parsed._id || "";
+      }
+    } catch {
+      journalUserId = "";
+    }
+
+    if (!journalUserId) {
+      return items;
+    }
+
+    return items.filter((item: any) => {
+      let itemJournalId: string | undefined = "";
+
+      if (typeof item.journalId === "object" && item.journalId) {
+        itemJournalId =
+          (item.journalId as any)._id ||
+          (item.journalId as any).journalId ||
+          "";
+      } else {
+        itemJournalId = item.journalId;
+      }
+
+      return (
+        itemJournalId && String(itemJournalId) === String(journalUserId)
+      );
+    });
+  };
 
   // Simplified state for demo - in real app might need file upload handling
   const [newManuscript, setNewManuscript] = useState<Manuscript>({
@@ -168,8 +226,16 @@ const ManuscriptsPage = () => {
       .then(res => res && res.json())
       .then(result => {
         if (result) {
-          if (Array.isArray(result)) setEditors(result);
-          else if (result.data && Array.isArray(result.data)) setEditors(result.data);
+          let list: Manuscript[] = [];
+
+          if (Array.isArray(result)) {
+            list = result;
+          } else if (result.data && Array.isArray(result.data)) {
+            list = result.data;
+          }
+
+          list = filterManuscriptsByJournal(list);
+          setEditors(list);
         }
       })
       .catch(err => {
@@ -237,8 +303,16 @@ const ManuscriptsPage = () => {
         });
         const result = await res.json();
         if (result) {
-          if (Array.isArray(result)) setEditors(result);
-          else if (result.data && Array.isArray(result.data)) setEditors(result.data);
+          let list: Manuscript[] = [];
+
+          if (Array.isArray(result)) {
+            list = result;
+          } else if (result.data && Array.isArray(result.data)) {
+            list = result.data;
+          }
+
+          list = filterManuscriptsByJournal(list);
+          setEditors(list);
         }
       } else {
         alert("Failed to delete manuscript");
@@ -291,7 +365,17 @@ const ManuscriptsPage = () => {
             <h3 className="page-title">Manuscripts</h3>
             <ul className="breadcrumb">
               <li className="breadcrumb-item">
-                <a href="/index">Dashboard</a>
+                <a
+                  href={
+                    userRole === "journal" && currentJournalUserId
+                      ? `${all_routes.journalDetails}?id=${encodeURIComponent(
+                          currentJournalUserId
+                        )}`
+                      : all_routes.index
+                  }
+                >
+                  Dashboard
+                </a>
               </li>
               <li className="breadcrumb-item active">Manuscripts</li>
             </ul>

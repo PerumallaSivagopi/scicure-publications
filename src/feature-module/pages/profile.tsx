@@ -114,7 +114,9 @@ const ProfilePage = () => {
             <div className="col">
               <h3 className="page-title text-2xl font-bold text-[#031E40]">Profile</h3>
               <ul className="breadcrumb text-sm text-gray-500">
-                <li className="breadcrumb-item"><a href="/index">Dashboard</a></li>
+                <li className="breadcrumb-item">
+                  <a href="/index">Dashboard</a>
+                </li>
                 <li className="breadcrumb-item active">Settings / Profile</li>
               </ul>
             </div>

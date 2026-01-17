@@ -14,8 +14,28 @@ const Login = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
-    if (token) {
-      navigate(all_routes.index);
+    if (!token) return;
+
+    const role = localStorage.getItem("userRole");
+    let userId: string | undefined;
+
+    try {
+      const storedInfo = localStorage.getItem("userInfo");
+      if (storedInfo) {
+        const parsed = JSON.parse(storedInfo);
+        userId = parsed.id || parsed._id;
+      }
+    } catch {
+      userId = undefined;
+    }
+
+    if (role === "journal" && userId) {
+      navigate(
+        `${all_routes.journalDetails}?id=${encodeURIComponent(userId)}`,
+        { replace: true }
+      );
+    } else {
+      navigate(all_routes.index, { replace: true });
     }
   }, [navigate]);
 
@@ -56,18 +76,27 @@ const Login = () => {
         
         // Attempt to extract user details from data.user or data directly
         const userObj = data.user || data;
-        
+
         const userInfo = {
-            id: userObj.id || userObj._id,
-            userName: userObj.userName || userObj.name || "Admin",
-            email: userObj.email,
-            journalImage: userObj.journalImage || userObj.image
+          id: userObj.id || userObj._id,
+          userName: userObj.userName || userObj.name || "Admin",
+          email: userObj.email,
+          journalImage: userObj.journalImage || userObj.image,
         };
-        
+
         console.log("Storing User Info:", userInfo);
         localStorage.setItem("userInfo", JSON.stringify(userInfo));
 
-        navigate(all_routes.index);
+        const userId = userInfo.id;
+
+        if (role === "journal" && userId) {
+          navigate(
+            `${all_routes.journalDetails}?id=${encodeURIComponent(userId)}`,
+            { replace: true }
+          );
+        } else {
+          navigate(all_routes.index, { replace: true });
+        }
       } catch (e) {
         setError(e?.message || "Login failed");
       } finally {
@@ -168,7 +197,7 @@ const Login = () => {
           </form>
 
           <div className="mt-8 text-xs text-gray-400">
-            Copyright © 2025 - Richh MindX AI
+            Copyright © 2025 - Scicure Publications
           </div>
         </div>
       </main>

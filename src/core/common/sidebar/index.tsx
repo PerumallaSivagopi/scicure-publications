@@ -8,20 +8,45 @@ const Sidebar = () => {
   const dispatch = useDispatch()
   const location = useLocation()
   const open = useSelector((s: any) => s.sidebarSlice.mobileSidebar)
+  const userRole = localStorage.getItem("userRole") || "Admin";
+  const normalizedRole = userRole.toLowerCase();
+
+  let journalDashboardPath = all_routes.index;
+  if (normalizedRole === "journal") {
+    try {
+      const storedInfo = localStorage.getItem("userInfo");
+      if (storedInfo) {
+        const parsed = JSON.parse(storedInfo);
+        const journalUserId = parsed.id || parsed._id;
+        if (journalUserId) {
+          journalDashboardPath = `${all_routes.journalDetails}?id=${encodeURIComponent(
+            journalUserId
+          )}`;
+        }
+      }
+    } catch {
+      journalDashboardPath = all_routes.index;
+    }
+  }
 
   const close = () => dispatch(setMobileSidebar(false))
 
-  const NavIcon = ({ to, icon, label }) => (
-    <Link
-      to={to}
-      title={label}
-      onClick={close}
-      className={`nav-icon ${location.pathname === to ? 'active' : ''}`}
-    >
-      <i className={`ti ${icon}`} />
-      <span className="label">{label}</span>
-    </Link>
-  )
+  const NavIcon = ({ to, icon, label }) => {
+    const pathOnly = typeof to === "string" ? to.split("?")[0] : to
+    const isActive = location.pathname === pathOnly
+
+    return (
+      <Link
+        to={to}
+        title={label}
+        onClick={close}
+        className={`nav-icon ${isActive ? 'active' : ''}`}
+      >
+        <i className={`ti ${icon}`} />
+        <span className="label">{label}</span>
+      </Link>
+    )
+  }
   const IMG_BASE = import.meta.env.VITE_IMAGE_BASE_URL;
   return (
     <aside className={`app-sidebar ${open ? 'open' : ''}`}>
@@ -32,16 +57,29 @@ const Sidebar = () => {
 
 
       <nav className="sidebar-nav">
-        <NavIcon to={all_routes.index} icon="ti-home" label="Dashboard" />
-        <NavIcon to={all_routes.journals} icon="ti-book" label="Journals" />
-        <NavIcon to={all_routes.article} icon="ti-files" label="Article" />
-        {/* <NavIcon to={all_routes.editorsChief} icon="ti-crown" label="Editors Chief" /> */}
-        <NavIcon to={all_routes.editorsBoard} icon="ti-user-check" label="Editors Board" />
-        {/* <NavIcon to={all_routes.authors} icon="ti-pencil" label="Authors" /> */}
-        <NavIcon to={all_routes.manuscripts} icon="ti-id-badge" label="Manuscripts" />
-        <NavIcon to={all_routes.contacts} icon="ti-user" label="Contact Enquiries" />
-        <NavIcon to={all_routes.notifications} icon="ti-bell" label="Notifications" />
-        <NavIcon to={all_routes.settings} icon="ti-settings" label="Settings" />
+
+        {normalizedRole === "journal" ? (
+          <>
+            <NavIcon to={journalDashboardPath} icon="ti-home" label="Dashboard" />
+            <NavIcon to={all_routes.article} icon="ti-files" label="Article" />
+            <NavIcon to={all_routes.editorsBoard} icon="ti-user-check" label="Editors Board" />
+            <NavIcon to={all_routes.manuscripts} icon="ti-id-badge" label="Manuscripts" />
+            <NavIcon to={all_routes.settings} icon="ti-settings" label="Settings" />
+          </>
+        ) : (
+          <>
+            <NavIcon to={all_routes.index} icon="ti-home" label="Dashboard" />
+            <NavIcon to={all_routes.journals} icon="ti-book" label="Journals" />
+            <NavIcon to={all_routes.article} icon="ti-files" label="Article" />
+            {/* <NavIcon to={all_routes.editorsChief} icon="ti-crown" label="Editors Chief" /> */}
+            <NavIcon to={all_routes.editorsBoard} icon="ti-user-check" label="Editors Board" />
+            {/* <NavIcon to={all_routes.authors} icon="ti-pencil" label="Authors" /> */}
+            <NavIcon to={all_routes.manuscripts} icon="ti-id-badge" label="Manuscripts" />
+            <NavIcon to={all_routes.contacts} icon="ti-user" label="Contact Enquiries" />
+            <NavIcon to={all_routes.notifications} icon="ti-bell" label="Notifications" />
+            <NavIcon to={all_routes.settings} icon="ti-settings" label="Settings" />
+          </>
+        )}
       </nav>
     </aside>
   )

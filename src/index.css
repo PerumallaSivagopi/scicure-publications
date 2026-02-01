@@ -126,3 +126,12 @@ body.dark {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.ql-container {
+  min-height: 220px;
+}
+
+.ql-editor {
+  min-height: 220px;
+  cursor: text;
+}

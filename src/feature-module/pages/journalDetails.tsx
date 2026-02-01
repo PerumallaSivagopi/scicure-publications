@@ -101,6 +101,7 @@ const [formData, setFormData] = useState({
     journalISSN: "",
     journalCategory: "",
     journalDescription: "",
+    journalAboutUs: "",
   });
   const [journalImageFile, setJournalImageFile] = useState<File | null>(null);
   const [journalBgImageFile, setJournalBgImageFile] = useState<File | null>(null);
@@ -378,6 +379,7 @@ const [formData, setFormData] = useState({
       journalISSN: journal.journalISSN || "",
       journalCategory: journal.journalCategory || "",
       journalDescription: journal.journalDescription || "",
+      journalAboutUs: journal.journalAboutUs || "",
     });
     setJournalImageFile(null);
     setJournalBgImageFile(null);
@@ -399,6 +401,10 @@ const [formData, setFormData] = useState({
 
   const handleJournalDescriptionChange = (value: string) => {
     setJournalForm((prev) => ({ ...prev, journalDescription: value }));
+  };
+
+  const handleJournalAboutUsChange = (value: string) => {
+    setJournalForm((prev) => ({ ...prev, journalAboutUs: value }));
   };
 
   const handleJournalImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -461,6 +467,7 @@ const [formData, setFormData] = useState({
       data.append("journalISSN", journalForm.journalISSN);
       data.append("journalCategory", journalForm.journalCategory);
       data.append("journalDescription", journalForm.journalDescription);
+      data.append("journalAboutUs", journalForm.journalAboutUs);
 
       if (journalImageFile) {
         data.append("journalImage", journalImageFile);
@@ -635,7 +642,7 @@ const [formData, setFormData] = useState({
           }')`,
         }}
       >
-        <div className="absolute inset-0 bg-black/55" />
+        {/* <div className="absolute inset-0 bg-black/55" /> */}
 
         <div className="relative z-10 h-full max-w-7xl mx-auto px-4 flex flex-col justify-center">
           {canManageJournal && journal && (
@@ -719,6 +726,16 @@ const [formData, setFormData] = useState({
                 <div
                   className="prose max-w-none text-gray-700"
                   dangerouslySetInnerHTML={{ __html: journal.journalDescription }}
+                />
+              ) : (
+                <p className="text-gray-600 leading-relaxed">
+                  No description available.
+                </p>
+              )}
+              {!journalLoading && !journalError && journal?.journalAboutUs ? (
+                <div
+                  className="prose max-w-none text-gray-700 mt-4"
+                  dangerouslySetInnerHTML={{ __html: journal.journalAboutUs }}
                 />
               ) : (
                 <p className="text-gray-600 leading-relaxed">
@@ -1787,6 +1804,45 @@ const [formData, setFormData] = useState({
                   value={journalForm.journalDescription}
                   onChange={handleJournalDescriptionChange}
                   placeholder="Enter journal description..."
+                  modules={{
+                    toolbar: [
+                      [{ header: [1, 2, false] }],
+                      ["bold", "italic", "underline", "strike", "blockquote"],
+                      [
+                        { list: "ordered" },
+                        { list: "bullet" },
+                        { indent: "-1" },
+                        { indent: "+1" },
+                      ],
+                      ["link", "image"],
+                      ["clean"],
+                    ],
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="relative">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                About Us
+              </label>
+              <div className="react-quill-container">
+                <style>{`
+                  .ql-container {
+                    min-height: 200px;
+                    border-bottom-left-radius: 0.5rem;
+                    border-bottom-right-radius: 0.5rem;
+                  }
+                  .ql-toolbar {
+                    border-top-left-radius: 0.5rem;
+                    border-top-right-radius: 0.5rem;
+                  }
+                `}</style>
+                <ReactQuill
+                  theme="snow"
+                  value={journalForm.journalAboutUs}
+                  onChange={handleJournalAboutUsChange}
+                  placeholder="Enter journal about us..."
                   modules={{
                     toolbar: [
                       [{ header: [1, 2, false] }],

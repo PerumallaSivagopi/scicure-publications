@@ -20,6 +20,7 @@ interface Journal {
   journalBgImage?: string;
   journalName?: string;
   journalDescription?: string;
+  journalAboutUs?: string;
   userName?: string; // from User model
   email?: string;    // from User model
   mobile?: string;   // from User model
@@ -47,7 +48,8 @@ const JournalsPage = () => {
     journalTitle: '',
     journalISSN: '',
     journalCategory: '',
-    journalDescription: ''
+    journalDescription: '',
+    journalAboutUs: ''
   });
 
   const [journalImage, setJournalImage] = useState<File | null>(null);
@@ -60,7 +62,7 @@ const JournalsPage = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
- 
+
   useEffect(() => {
     fetchJournals();
   }, []);
@@ -148,8 +150,8 @@ const JournalsPage = () => {
     }
 
     if (!isEditMode && !formData.password) {
-        alert("Password is required for new journals");
-        return;
+      alert("Password is required for new journals");
+      return;
     }
 
     setIsSubmitting(true);
@@ -166,6 +168,7 @@ const JournalsPage = () => {
       data.append('journalISSN', formData.journalISSN);
       data.append('journalCategory', formData.journalCategory);
       data.append('journalDescription', formData.journalDescription);
+      data.append('journalAboutUs', formData.journalAboutUs);
       // Status is handled by backend or separate toggle usually, but sticking to existing logic if needed
       // If we want to update status, we need to add it to formData or handle it separately.
       // For now, assuming basic update.
@@ -220,7 +223,8 @@ const JournalsPage = () => {
       journalTitle: '',
       journalISSN: '',
       journalCategory: '',
-      journalDescription: ''
+      journalDescription: '',
+      journalAboutUs: ''
     });
     setJournalImage(null);
     setImagePreview(null);
@@ -253,22 +257,23 @@ const JournalsPage = () => {
       journalTitle: row.journalTitle || '',
       journalISSN: row.journalISSN || '',
       journalCategory: row.journalCategory || '',
-      journalDescription: row.journalDescription || ''
+      journalDescription: row.journalDescription || '',
+      journalAboutUs: row.journalAboutUs || ''
     });
     if (row.journalImage) {
-         // Assuming backend returns full path or filename. If filename, construct path.
-         // Based on other code, it might be just filename. But let's check view.
-         // Set preview if possible. For now, just setting it if it's a full URL or construct it.
-         setImagePreview(`${ImageUrl}${row.journalImage}`);
+      // Assuming backend returns full path or filename. If filename, construct path.
+      // Based on other code, it might be just filename. But let's check view.
+      // Set preview if possible. For now, just setting it if it's a full URL or construct it.
+      setImagePreview(`${ImageUrl}${row.journalImage}`);
     } else {
-        setImagePreview(null);
+      setImagePreview(null);
     }
     if (row.journalBgImage) {
-         setBgImagePreview(`${ImageUrl}${row.journalBgImage}`);
+      setBgImagePreview(`${ImageUrl}${row.journalBgImage}`);
     } else {
-         setBgImagePreview(null);
+      setBgImagePreview(null);
     }
-    
+
     setIsEditMode(true);
     setIsAddModalOpen(true);
   };
@@ -282,26 +287,26 @@ const JournalsPage = () => {
     if (!selectedJournal) return;
 
     try {
-        const token = localStorage.getItem("authToken") || "";
-        const response = await fetch(`${URLS.USERS}/delete/${selectedJournal._id}`, {
-            method: 'DELETE',
-            headers: {
-                "Authorization": `Bearer ${token}`,
-            }
-        });
-
-        if (response.ok) {
-            alert("Journal deleted successfully");
-            fetchJournals();
-        } else {
-             alert("Failed to delete journal");
+      const token = localStorage.getItem("authToken") || "";
+      const response = await fetch(`${URLS.USERS}/delete/${selectedJournal._id}`, {
+        method: 'DELETE',
+        headers: {
+          "Authorization": `Bearer ${token}`,
         }
+      });
+
+      if (response.ok) {
+        alert("Journal deleted successfully");
+        fetchJournals();
+      } else {
+        alert("Failed to delete journal");
+      }
     } catch (error) {
-        console.error("Error deleting journal:", error);
-        alert("Error deleting journal");
+      console.error("Error deleting journal:", error);
+      alert("Error deleting journal");
     } finally {
-        setIsDeleteModalOpen(false);
-        setSelectedJournal(null);
+      setIsDeleteModalOpen(false);
+      setSelectedJournal(null);
     }
   };
 
@@ -460,8 +465,8 @@ const JournalsPage = () => {
                       onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                       disabled={currentPage === 1}
                       className={`px-3 py-1.5 border border-gray-200 rounded-md text-sm font-medium transition-colors
-                        ${currentPage === 1 
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                        ${currentPage === 1
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                           : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer'}`}
                     >
                       Previous
@@ -765,7 +770,7 @@ const JournalsPage = () => {
                     toolbar: [
                       [{ 'header': [1, 2, false] }],
                       ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-                      [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
+                      [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
                       ['link', 'image'],
                       ['clean']
                     ],
@@ -773,6 +778,22 @@ const JournalsPage = () => {
                 />
               </div>
             </div>
+
+            <div className="relative mt-5">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
+                Journal About Us
+              </label>
+
+              <ReactQuill
+                theme="snow"
+                value={formData.journalAboutUs}
+                onChange={(value) =>
+                  setFormData(prev => ({ ...prev, journalAboutUs: value }))
+                }
+                placeholder="Enter About Us content..."
+              />
+            </div>
+
           </div>
         </div>
       </Modal>
@@ -796,107 +817,121 @@ const JournalsPage = () => {
           <div className="space-y-6">
             <div className="flex flex-col md:flex-row gap-6 border-b border-gray-100 pb-6">
               <div className="w-full md:w-1/3">
-                 {selectedJournal.journalImage ? (
-                    <img 
-                        src={`${ImageUrl}${selectedJournal.journalImage}`} 
-                        alt={selectedJournal.journalTitle} 
-                        className="w-full h-auto rounded-xl shadow-md object-cover border border-gray-100"
-                        onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x400?text=No+Image';
-                        }}
-                    />
-                 ) : (
-                    <div className="w-full h-48 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 border border-gray-200">
-                        <BookOpen size={48} />
-                    </div>
-                 )}
+                {selectedJournal.journalImage ? (
+                  <img
+                    src={`${ImageUrl}${selectedJournal.journalImage}`}
+                    alt={selectedJournal.journalTitle}
+                    className="w-full h-auto rounded-xl shadow-md object-cover border border-gray-100"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x400?text=No+Image';
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-48 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 border border-gray-200">
+                    <BookOpen size={48} />
+                  </div>
+                )}
               </div>
               <div className="w-full md:w-2/3 space-y-4">
-                 <div>
-                    <h4 className="text-2xl font-bold text-[#00467F] mb-1">{selectedJournal.journalTitle}</h4>
-                    <p className="text-gray-600 font-medium">{selectedJournal.journalName}</p>
-                 </div>
-                 
-                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-100">
-                        <Hash size={18} className="text-blue-500" />
-                        <div>
-                            <p className="text-xs text-gray-500 uppercase font-semibold">Journal ID</p>
-                            <p className="text-sm font-medium text-gray-900">{selectedJournal.journalId}</p>
-                        </div>
+                <div>
+                  <h4 className="text-2xl font-bold text-[#00467F] mb-1">{selectedJournal.journalTitle}</h4>
+                  <p className="text-gray-600 font-medium">{selectedJournal.journalName}</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+                    <Hash size={18} className="text-blue-500" />
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-semibold">Journal ID</p>
+                      <p className="text-sm font-medium text-gray-900">{selectedJournal.journalId}</p>
                     </div>
-                    <div className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-100">
-                        <Hash size={18} className="text-purple-500" />
-                        <div>
-                            <p className="text-xs text-gray-500 uppercase font-semibold">ISSN</p>
-                            <p className="text-sm font-medium text-gray-900">{selectedJournal.journalISSN}</p>
-                        </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+                    <Hash size={18} className="text-purple-500" />
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-semibold">ISSN</p>
+                      <p className="text-sm font-medium text-gray-900">{selectedJournal.journalISSN}</p>
                     </div>
-                    <div className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-100">
-                        <Layers size={18} className="text-orange-500" />
-                        <div>
-                            <p className="text-xs text-gray-500 uppercase font-semibold">Category</p>
-                            <p className="text-sm font-medium text-gray-900">{selectedJournal.journalCategory}</p>
-                        </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+                    <Layers size={18} className="text-orange-500" />
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-semibold">Category</p>
+                      <p className="text-sm font-medium text-gray-900">{selectedJournal.journalCategory}</p>
                     </div>
-                    <div className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-100">
-                        <Calendar size={18} className="text-green-500" />
-                        <div>
-                            <p className="text-xs text-gray-500 uppercase font-semibold">Created</p>
-                            <p className="text-sm font-medium text-gray-900">{new Date(selectedJournal.createdAt).toLocaleDateString()}</p>
-                        </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+                    <Calendar size={18} className="text-green-500" />
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-semibold">Created</p>
+                      <p className="text-sm font-medium text-gray-900">{new Date(selectedJournal.createdAt).toLocaleDateString()}</p>
                     </div>
-                    <div className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-100">
-                         <div className={`w-2 h-2 rounded-full ${selectedJournal.status.toLowerCase() === 'active' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                         <div>
-                            <p className="text-xs text-gray-500 uppercase font-semibold">Status</p>
-                            <p className={`text-sm font-medium ${selectedJournal.status.toLowerCase() === 'active' ? 'text-green-600' : 'text-yellow-600'}`}>
-                                {selectedJournal.status}
-                            </p>
-                         </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+                    <div className={`w-2 h-2 rounded-full ${selectedJournal.status.toLowerCase() === 'active' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-semibold">Status</p>
+                      <p className={`text-sm font-medium ${selectedJournal.status.toLowerCase() === 'active' ? 'text-green-600' : 'text-yellow-600'}`}>
+                        {selectedJournal.status}
+                      </p>
                     </div>
-                 </div>
+                  </div>
+                </div>
               </div>
             </div>
-            
+
             {(selectedJournal as any).journalDescription && (
-                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <h5 className="text-sm font-bold text-gray-900 uppercase mb-3 flex items-center gap-2">
-                        <FileText size={16} /> Description
-                    </h5>
-                    <div className="prose prose-sm max-w-none text-gray-600" dangerouslySetInnerHTML={{ __html: (selectedJournal as any).journalDescription }} />
-                </div>
-            )}
-             
-             {/* Contact Information */}
-             <div>
+              <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                 <h5 className="text-sm font-bold text-gray-900 uppercase mb-3 flex items-center gap-2">
-                    <User size={16} /> Contact Information
+                  <FileText size={16} /> Description
                 </h5>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                     <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
-                        <User size={18} className="text-blue-500 min-w-4" />
-                        <div className="flex-grow">
-                            <p className="text-xs text-gray-500 uppercase font-semibold">Name</p>
-                            <p className="font-medium text-gray-900">{(selectedJournal as any).userName}</p>
-                        </div>
-                     </div>
-                     <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
-                        <Mail size={18} className="text-red-500 min-w-4" />
-                        <div className="flex-grow">
-                            <p className="text-xs text-gray-500 uppercase font-semibold">Email</p>
-                            <p className="font-medium text-gray-900 break-all">{(selectedJournal as any).email}</p>
-                        </div>
-                     </div>
-                     <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
-                        <Phone size={18} className="text-green-500 min-w-4" />
-                        <div className="flex-grow">
-                            <p className="text-xs text-gray-500 uppercase font-semibold">Mobile</p>
-                            <p className="font-medium text-gray-900">{(selectedJournal as any).mobile}</p>
-                        </div>
-                     </div>
+                <div className="prose prose-sm max-w-none text-gray-600" dangerouslySetInnerHTML={{ __html: (selectedJournal as any).journalDescription }} />
+              </div>
+            )}
+
+            {(selectedJournal as any).journalAboutUs && (
+              <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mt-4">
+                <h5 className="text-sm font-bold text-gray-900 uppercase mb-3">
+                  About Us
+                </h5>
+                <div
+                  className="prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{
+                    __html: (selectedJournal as any).journalAboutUs
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Contact Information */}
+            <div>
+              <h5 className="text-sm font-bold text-gray-900 uppercase mb-3 flex items-center gap-2">
+                <User size={16} /> Contact Information
+              </h5>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                  <User size={18} className="text-blue-500 min-w-4" />
+                  <div className="flex-grow">
+                    <p className="text-xs text-gray-500 uppercase font-semibold">Name</p>
+                    <p className="font-medium text-gray-900">{(selectedJournal as any).userName}</p>
+                  </div>
                 </div>
-             </div>
+                <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                  <Mail size={18} className="text-red-500 min-w-4" />
+                  <div className="flex-grow">
+                    <p className="text-xs text-gray-500 uppercase font-semibold">Email</p>
+                    <p className="font-medium text-gray-900 break-all">{(selectedJournal as any).email}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                  <Phone size={18} className="text-green-500 min-w-4" />
+                  <div className="flex-grow">
+                    <p className="text-xs text-gray-500 uppercase font-semibold">Mobile</p>
+                    <p className="font-medium text-gray-900">{(selectedJournal as any).mobile}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </Modal>
@@ -907,31 +942,31 @@ const JournalsPage = () => {
         onClose={() => setIsDeleteModalOpen(false)}
         title="Confirm Delete"
         footer={
-             <>
-                <button
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="px-5 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-                >
-                Cancel
-                </button>
-                <button
-                onClick={confirmDelete}
-                className="px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors"
-                >
-                Delete
-                </button>
-            </>
+          <>
+            <button
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="px-5 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmDelete}
+              className="px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors"
+            >
+              Delete
+            </button>
+          </>
         }
       >
         <div className="text-center py-4">
-            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-                <Trash2 size={24} className="text-red-600" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Delete Journal?</h3>
-            <p className="text-gray-500">
-                Are you sure you want to delete <span className="font-semibold text-gray-900">{selectedJournal?.journalTitle}</span>? 
-                This action cannot be undone.
-            </p>
+          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+            <Trash2 size={24} className="text-red-600" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Delete Journal?</h3>
+          <p className="text-gray-500">
+            Are you sure you want to delete <span className="font-semibold text-gray-900">{selectedJournal?.journalTitle}</span>?
+            This action cannot be undone.
+          </p>
         </div>
       </Modal>
     </div>

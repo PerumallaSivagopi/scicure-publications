@@ -1,7 +1,7 @@
-export const Url = "http://15.207.14.102:5001/";
+export const Url = "https://api.scicurepublications.com/";
 // export const Url = "http://localhost:5001/";
 
-export const ImageUrl = "http://15.207.14.102:5001/uploads/";
+export const ImageUrl = "https://api.scicurepublications.com/uploads/";
 // export const ImageUrl = "http://localhost:5001/uploads";
 
 export const URLS = {

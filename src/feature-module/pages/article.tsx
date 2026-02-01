@@ -190,7 +190,7 @@ const ArticlePage = () => {
       return;
     }
     const token = localStorage.getItem("authToken") || "";
-    fetch(`${URLS.ISSUES}/archive/${journalId}`, {
+    fetch(`${URLS.ISSUES}/archives/${journalId}`, {
       method: "GET",
       headers: {
         "content-type": "application/json",

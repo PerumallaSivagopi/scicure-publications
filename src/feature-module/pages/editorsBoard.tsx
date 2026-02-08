@@ -191,8 +191,8 @@ const EditorsBoard = () => {
   };
 
   const handleSaveEditor = () => {
-    if (!newEditor.editorName) {
-      alert("Please fill in required fields (Name)");
+    if (!newEditor.editorName || !newEditor.designation || !newEditor.institution || !newEditor.country) {
+      alert("Please fill in required fields (Name, Designation, Institution, Country)");
       return;
     }
 
@@ -673,7 +673,7 @@ const EditorsBoard = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="relative">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Designation</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Designation <span className="text-red-500">*</span></label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                   <Briefcase size={18} />
@@ -689,7 +689,7 @@ const EditorsBoard = () => {
             </div>
 
             <div className="relative">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Country</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Country <span className="text-red-500">*</span></label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                   <Globe size={18} />
@@ -706,7 +706,7 @@ const EditorsBoard = () => {
           </div>
 
           <div className="relative">
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Institution</label>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Institution <span className="text-red-500">*</span></label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                 <Building2 size={18} />

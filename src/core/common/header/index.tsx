@@ -4,6 +4,7 @@ import { ChevronDown, User, Settings, LogOut } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../data/redux/hooks";
 import { setMobileSidebar } from "../../data/redux/sidebarSlice";
 import { setDataTheme } from "../../data/redux/themeSettingSlice";
+import { ImageUrl } from "../../../Urls";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const Header = () => {
   const toggleSidebar = () => dispatch(setMobileSidebar(!sidebarOpen));
   const toggleTheme = () =>
     dispatch(setDataTheme(theme === "dark" ? "light" : "dark"));
-  const IMG_BASE = import.meta.env.VITE_IMAGE_BASE_URL;
+  const IMG_BASE = import.meta.env.VITE_IMAGE_BASE_URL || ImageUrl;
 
   // ✅ Add rotation state here
   const [rotated, setRotated] = useState(false);
@@ -49,12 +50,8 @@ const Header = () => {
   }
 
   const avatarSrc =
-    userInfo.journalImage
-      ? (userInfo.journalImage.startsWith("http")
-          ? userInfo.journalImage
-          : `${IMG_BASE}${userInfo.journalImage}`)
-      : "/image.png";
-
+    ImageUrl + userInfo.journalImage;
+  
   // Wrap your existing function so both things run
   const handleMenuClick = () => {
     setRotated(!rotated); // rotate the arrow

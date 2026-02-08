@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { all_routes } from "../../router/all_routes";
 import { loginAdmin } from "../../core/services/authService";
 import { Eye, EyeOff } from "lucide-react";
+import { URLS } from "../../Urls";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -88,6 +89,26 @@ const Login = () => {
         localStorage.setItem("userInfo", JSON.stringify(userInfo));
 
         const userId = userInfo.id;
+
+        if (role === "journal" && userId && !userInfo.journalImage) {
+          try {
+            const tokenHeader = localStorage.getItem("authToken") || "";
+            const detailRes = await fetch(`${URLS.USERS}/${userId}`, {
+              method: "GET",
+              headers: {
+                "content-type": "application/json",
+                Authorization: `Bearer ${tokenHeader}`,
+              },
+            });
+            const detailJson = await detailRes.json();
+            const detailData = detailJson?.data || detailJson?.user || detailJson;
+            const ji = detailData?.journalImage || detailData?.image || "";
+            if (ji) {
+              const updated = { ...userInfo, journalImage: ji };
+              localStorage.setItem("userInfo", JSON.stringify(updated));
+            }
+          } catch {}
+        }
 
         if (role === "journal" && userId) {
           navigate(

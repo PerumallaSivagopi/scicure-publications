@@ -30,6 +30,10 @@ const ManuscriptsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const trim = (v?: string, n: number = 24) => {
+    if (!v) return "-";
+    return v.length > n ? v.slice(0, n) + "…" : v;
+  };
 
   const userRole = (localStorage.getItem("userRole") || "").toLowerCase();
 
@@ -419,12 +423,6 @@ const ManuscriptsPage = () => {
                       }}
                       className="w-full sm:w-64 border border-gray-200 rounded-lg pl-4 pr-10 py-2 text-sm focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] outline-none"
                     />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                      </svg>
-                    </div>
                   </div>
                 </div>
 
@@ -433,15 +431,14 @@ const ManuscriptsPage = () => {
                   <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-700 font-medium border-b border-gray-200">
                       <tr>
-                        <th className="px-6 py-4">S.No</th>
-                        <th className="px-6 py-4">Author</th>
-                        <th className="px-6 py-4">Email</th>
-                        <th className="px-6 py-4">Country</th>
-                        <th className="px-6 py-4">Journal Name</th>
-                        <th className="px-6 py-4">Manuscript Title</th>
-                        <th className="px-6 py-4">Manuscript Type</th>
-                        <th className="px-6 py-4">PDF</th>
-                        <th className="px-6 py-4">Action</th>
+                        <th className="px-3 py-4">S.No</th>
+                        <th className="px-3 py-4">Author</th>
+                        <th className="px-3 py-4">Email</th>
+                        <th className="px-3 py-4">Journal Name</th>
+                        <th className="px-3 py-4">Manuscript Title</th>
+                        <th className="px-3 py-4">Manuscript Type</th>
+                        <th className="px-3 py-4">PDF</th>
+                        <th className="px-3 py-4">Action</th>
                       </tr>
                     </thead>
 
@@ -449,22 +446,29 @@ const ManuscriptsPage = () => {
                       {paginatedData.length > 0 ? (
                         paginatedData.map((row, index) => (
                           <tr key={row._id || index} className="hover:bg-gray-50/50 transition-colors">
-                            <td className="px-6 py-4">{(currentPage - 1) * pageSize + index + 1}</td>
-                            <td className="px-6 py-4 font-medium text-gray-900">{row.authorName || "-"}</td>
-                            <td className="px-6 py-4 text-gray-500">{row.email || "-"}</td>
-                            <td className="px-6 py-4 text-gray-500">{row.country || "-"}</td>
-                            <td className="px-6 py-4 text-[#00467F]">
-                              {typeof row.journalId === 'object' && row.journalId !== null
-                                ? (row.journalId as any).journalName
-                                : "-"}
+                            <td className="px-3 py-4">{(currentPage - 1) * pageSize + index + 1}</td>
+                            <td className="px-3 py-4 font-medium text-gray-900">
+                              <div className="max-w-[180px] truncate">{trim(row.authorName, 12)}</div>
                             </td>
-                            <td className="px-6 py-4 text-gray-900">{row.menuscriptTitle || "-"}</td>
-                            <td className="px-6 py-4">
+                            <td className="px-3 py-4 text-gray-500">
+                              <div className="max-w-[220px] truncate">{trim(row.email, 20)}</div>
+                            </td>
+                            <td className="px-3 py-4 text-[#00467F]">
+                              <div className="max-w-[220px] truncate">
+                                {typeof row.journalId === 'object' && row.journalId !== null
+                                  ? trim((row.journalId as any).journalName, 20)
+                                  : "-"}
+                              </div>
+                            </td>
+                            <td className="px-3 py-4 text-gray-900">
+                              <div className="max-w-[260px] truncate">{trim(row.menuscriptTitle, 20)}</div>
+                            </td>
+                            <td className="px-3 py-4">
                               <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
                                 {row.articleType || "-"}
                               </span>
                             </td>
-                            <td className="px-6 py-4">
+                            <td className="px-3 py-4">
                               {row.manuscriptFile ? (
                                 <a
                                   href={`${Url}upload/${row.manuscriptFile}`}
@@ -479,7 +483,7 @@ const ManuscriptsPage = () => {
                                 <span className="text-gray-400">-</span>
                               )}
                             </td>
-                            <td className="px-6 py-4">
+                            <td className="px-3 py-4">
                               <div className="flex items-center gap-2">
 
                                 <button
@@ -509,7 +513,7 @@ const ManuscriptsPage = () => {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={10} style={{ textAlign: "center", padding: 20 }}>
+                          <td colSpan={8} style={{ textAlign: "center", padding: 20 }}>
                             No records found
                           </td>
                         </tr>

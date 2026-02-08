@@ -710,7 +710,7 @@ const ArticlePage = () => {
           {/* Section 1: Basic Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="relative">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Article Title *</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Article Title <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
@@ -719,7 +719,7 @@ const ArticlePage = () => {
               />
             </div>
             <div className="relative">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Journal *</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Journal <span className="text-red-500">*</span></label>
               <select
                 className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white appearance-none"
                 value={newArticle.journalId}
@@ -739,7 +739,7 @@ const ArticlePage = () => {
           {/* Section 2: Author Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="relative">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Author Name *</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Author Name <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"
@@ -748,7 +748,7 @@ const ArticlePage = () => {
               />
             </div>
             <div className="relative">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Author Email *</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Author Email <span className="text-red-500">*</span></label>
               <input
                 type="email"
                 className="w-full pl-4 pr-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-[#00467F]/20 focus:border-[#00467F] block transition-all duration-200 outline-none hover:bg-white"

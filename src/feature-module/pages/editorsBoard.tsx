@@ -25,6 +25,10 @@ const EditorsBoard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const trim = (v?: string, n: number = 24) => {
+    if (!v) return "-";
+    return v.length > n ? v.slice(0, n) + "…" : v;
+  };
 
   // New state for Modal and Form
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -187,8 +191,8 @@ const EditorsBoard = () => {
   };
 
   const handleSaveEditor = () => {
-    if (!newEditor.editorName || !newEditor.email) {
-      alert("Please fill in required fields (Name, Email)");
+    if (!newEditor.editorName) {
+      alert("Please fill in required fields (Name)");
       return;
     }
 
@@ -459,45 +463,44 @@ const EditorsBoard = () => {
                   </div>
                 </div>
 
-                {/* TABLE */}
-                <div className="overflow-x-auto">
-                  <table
-                    className="table table-striped table-hover"
-                    style={{ whiteSpace: "nowrap" }}
-                  >
-                    <thead>
+                <div className="overflow-x-auto rounded-xl border border-gray-200">
+                  <table className="w-full text-sm text-left">
+                    <thead className="bg-gray-50 text-gray-700 font-medium border-b border-gray-200">
                       <tr>
-                        <th>S.No</th>
-                        <th>Editor Name</th>
-                        <th>Email</th>
-                        <th>Designation</th>
-                        <th>Institution</th>
-                        <th>Journal Name</th>
-                        <th>Country</th>
-                        <th>Action</th>
+                        <th className="px-3 py-4">S.No</th>
+                        <th className="px-3 py-4">Editor Name</th>
+                        <th className="px-3 py-4">Email</th>
+                        <th className="px-3 py-4">Designation</th>
+                        <th className="px-3 py-4">Journal Name</th>
+                        <th className="px-3 py-4">Country</th>
+                        <th className="px-3 py-4">Action</th>
                       </tr>
                     </thead>
-
-                    <tbody>
+                    <tbody className="divide-y divide-gray-100">
                       {paginatedData.length > 0 ? (
                         paginatedData.map((row, index) => (
-                          <tr key={row._id || index}>
-                            <td>{(currentPage - 1) * pageSize + index + 1}</td>
-                            <td>{row.editorName || "-"}</td>
-                            <td>{row.email || "-"}</td>
-                            <td>{row.designation || "-"}</td>
-                            <td>{row.institution || "-"}</td>
-
-                            {/* FIXED HERE */}
-                            <td>
-                                {typeof row.journalId === 'object' && row.journalId !== null 
-                                  ? (row.journalId as any).journalName 
-                                  : "-"}
+                          <tr key={row._id || index} className="hover:bg-gray-50/50 transition-colors">
+                            <td className="px-3 py-4">{(currentPage - 1) * pageSize + index + 1}</td>
+                            <td className="px-3 py-4">
+                              <div className="max-w-[180px] truncate">{trim(row.editorName, 15)}</div>
                             </td>
-
-                            <td>{row.country || "-"}</td>
-
-                            <td>
+                            <td className="px-3 py-4 text-gray-600">
+                              <div className="max-w-[220px] truncate">{trim(row.email, 20)}</div>
+                            </td>
+                            <td className="px-3 py-4">
+                              <div className="max-w-[160px] truncate">{trim(row.designation, 20)}</div>
+                            </td>
+                            <td className="px-3 py-4 text-[#00467F]">
+                              <div className="max-w-[200px] truncate">
+                                {typeof row.journalId === "object" && row.journalId !== null
+                                  ? trim((row.journalId as any).journalName, 20)
+                                  : "-"}
+                              </div>
+                            </td>
+                            <td className="px-3 py-4 text-gray-600">
+                              <div className="max-w-[120px] truncate">{trim(row.country, 18)}</div>
+                            </td>
+                            <td className="px-3 py-4">
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => handleView(row)}
@@ -526,10 +529,7 @@ const EditorsBoard = () => {
                         ))
                       ) : (
                         <tr>
-                          <td
-                            colSpan={8}
-                            style={{ textAlign: "center", padding: 20 }}
-                          >
+                          <td colSpan={7} className="px-3 py-6 text-center text-gray-500">
                             No records found
                           </td>
                         </tr>
@@ -617,7 +617,7 @@ const EditorsBoard = () => {
       >
         <div className="space-y-5">
           <div className="relative">
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Editor Name *</label>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Editor Name <span className="text-red-500">*</span></label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                 <User size={18} />
@@ -656,7 +656,7 @@ const EditorsBoard = () => {
           </div>
           
           <div className="relative">
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Email *</label>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">Email </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                 <Mail size={18} />

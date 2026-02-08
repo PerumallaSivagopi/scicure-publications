@@ -48,6 +48,13 @@ const Header = () => {
     console.error("Failed to parse user info", error);
   }
 
+  const avatarSrc =
+    userInfo.journalImage
+      ? (userInfo.journalImage.startsWith("http")
+          ? userInfo.journalImage
+          : `${IMG_BASE}${userInfo.journalImage}`)
+      : "/image.png";
+
   // Wrap your existing function so both things run
   const handleMenuClick = () => {
     setRotated(!rotated); // rotate the arrow
@@ -92,7 +99,7 @@ const Header = () => {
             >
               <div className="w-8 h-8 rounded-full overflow-hidden border border-[#00467F]">
                  <img 
-                    src={userInfo.journalImage || "/image.png"} 
+                    src={avatarSrc} 
                     alt="avatar" 
                     className="w-full h-full object-cover" 
                     onError={(e) => { e.currentTarget.src = "/image.png" }}
